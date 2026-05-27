@@ -1,0 +1,1 @@
+{"version":3,"file":"create-bulk-students.dto.js","sourceRoot":"","sources":["../../../src/students/dto/create-bulk-students.dto.ts"],"names":[],"mappings":";;;;;;;;;;;;AAAA,qDAA0D;AAC1D,yDAAyC;AACzC,6DAAwD;AAExD,MAAa,qBAAqB;CAKjC;AALD,sDAKC;AADC;IAHC,IAAA,yBAAO,GAAE;IACT,IAAA,gCAAc,EAAC,EAAE,IAAI,EAAE,IAAI,EAAE,CAAC;IAC9B,IAAA,wBAAI,EAAC,GAAG,EAAE,CAAC,qCAAgB,CAAC;;uDACA"}
