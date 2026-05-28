@@ -11,6 +11,9 @@ export class Group extends Document {
 
   @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: true })
   createdBy: MongooseSchema.Types.ObjectId;
+
+  @Prop({ type: [{ type: MongooseSchema.Types.ObjectId, ref: 'User' }], default: [] })
+  teachers: MongooseSchema.Types.ObjectId[];
 }
 
 export const GroupSchema = SchemaFactory.createForClass(Group);

@@ -19,8 +19,10 @@ export class GroupsController {
 
   // Todos pueden ver los grupos (Profesores necesitan verlos para seleccionarlos)
   @Get()
-  findAll() {
-    return this.groupsService.findAll();
+  findAll(@Request() req: any) {
+    const userId = req.user.userId;
+    const userRole = req.user.roles[0].name;
+    return this.groupsService.findAll(userId, userRole);
   }
 
   @Get(':id')

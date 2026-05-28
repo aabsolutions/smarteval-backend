@@ -28,11 +28,21 @@ let GroupsService = class GroupsService {
         });
         return createdGroup.save();
     }
-    async findAll() {
-        return this.groupModel.find().populate('createdBy', 'name email').exec();
+    async findAll(userId, userRole) {
+        const query = {};
+        if (userRole === 'TEACHER') {
+            query.teachers = userId;
+        }
+        return this.groupModel.find(query)
+            .populate('createdBy', 'name email')
+            .populate('teachers', 'name email')
+            .exec();
     }
     async findOne(id) {
-        const group = await this.groupModel.findById(id).populate('createdBy', 'name email').exec();
+        const group = await this.groupModel.findById(id)
+            .populate('createdBy', 'name email')
+            .populate('teachers', 'name email')
+            .exec();
         if (!group) {
             throw new common_1.NotFoundException(`Grupo con ID ${id} no encontrado`);
         }

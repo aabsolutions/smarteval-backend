@@ -27,8 +27,10 @@ let GroupsController = class GroupsController {
     create(createGroupDto, req) {
         return this.groupsService.create(createGroupDto, req.user.userId);
     }
-    findAll() {
-        return this.groupsService.findAll();
+    findAll(req) {
+        const userId = req.user.userId;
+        const userRole = req.user.roles[0].name;
+        return this.groupsService.findAll(userId, userRole);
     }
     findOne(id) {
         return this.groupsService.findOne(id);
@@ -52,8 +54,9 @@ __decorate([
 ], GroupsController.prototype, "create", null);
 __decorate([
     (0, common_1.Get)(),
+    __param(0, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
+    __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)
 ], GroupsController.prototype, "findAll", null);
 __decorate([

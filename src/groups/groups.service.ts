@@ -17,12 +17,22 @@ export class GroupsService {
     return createdGroup.save();
   }
 
-  async findAll(): Promise<Group[]> {
-    return this.groupModel.find().populate('createdBy', 'name email').exec();
+  async findAll(userId?: string, userRole?: string): Promise<Group[]> {
+    const query: any = {};
+    if (userRole === 'TEACHER') {
+      query.teachers = userId;
+    }
+    return this.groupModel.find(query)
+      .populate('createdBy', 'name email')
+      .populate('teachers', 'name email')
+      .exec();
   }
 
   async findOne(id: string): Promise<Group> {
-    const group = await this.groupModel.findById(id).populate('createdBy', 'name email').exec();
+    const group = await this.groupModel.findById(id)
+      .populate('createdBy', 'name email')
+      .populate('teachers', 'name email')
+      .exec();
     if (!group) {
       throw new NotFoundException(`Grupo con ID ${id} no encontrado`);
     }
