@@ -5,12 +5,14 @@ import { AssessmentAttempt, AssessmentAttemptDocument, AttemptStatus } from '../
 import { Assessment, AssessmentDocument } from './assessment.schema';
 import * as ExcelJS from 'exceljs';
 import { Response } from 'express';
+import { StudentsService } from '../students/students.service';
 
 @Injectable()
 export class ReportsService {
   constructor(
     @InjectModel(AssessmentAttempt.name) private attemptModel: Model<AssessmentAttemptDocument>,
     @InjectModel(Assessment.name) private assessmentModel: Model<AssessmentDocument>,
+    private studentsService: StudentsService,
   ) {}
 
   async getResults(assessmentId: string, teacherId: string) {
@@ -23,7 +25,24 @@ export class ReportsService {
     })
     .populate('studentId', 'name username email')
     .sort({ score: -1 })
+    .lean()
     .exec();
+
+    // Fetch groups for students
+    const usernames = attempts.map(a => a.studentId && (a.studentId as any).username).filter(Boolean);
+    const studentProfiles = await this.studentsService.findByIdentifiers(usernames);
+    const profileMap = new Map();
+    studentProfiles.forEach(profile => {
+      profileMap.set(profile.identifier, profile.groupId ? profile.groupId['name'] : 'N/A');
+    });
+
+    // Mutate attempts to inject group into student
+    attempts.forEach(attempt => {
+      if (attempt.studentId) {
+        const username = (attempt.studentId as any).username;
+        (attempt.studentId as any).group = profileMap.get(username) || 'N/A';
+      }
+    });
 
     if (assessment.isSimulator) {
       const studentMap = new Map();
@@ -100,6 +119,39 @@ export class ReportsService {
         aprobados
       },
       results: formattedAttempts
+    };
+  }
+
+  async getAttemptDetail(assessmentId: string, attemptId: string, teacherId: string): Promise<any> {
+    const assessment = await this.assessmentModel.findOne({ _id: assessmentId, teacherId: new Types.ObjectId(teacherId) });
+    if (!assessment) throw new NotFoundException('Examen no encontrado');
+
+    const attempt = await this.attemptModel.findOne({
+      _id: new Types.ObjectId(attemptId),
+      assessmentId: new Types.ObjectId(assessmentId),
+    }).populate('studentId', 'name username email')
+      .populate({
+        path: 'assessmentId',
+        select: 'startTime endTime teacherId title',
+        populate: { path: 'teacherId', select: 'name' }
+      })
+      .lean()
+      .exec();
+
+    if (!attempt) throw new NotFoundException('Intento no encontrado');
+
+    // Resolve student group
+    let groupName = 'N/A';
+    if (attempt.studentId && attempt.studentId['username']) {
+      const studentProfile = await this.studentsService.findByIdentifier(attempt.studentId['username']);
+      if (studentProfile && studentProfile.groupId) {
+        groupName = studentProfile.groupId['name'] || 'N/A';
+      }
+    }
+
+    return {
+      ...attempt,
+      studentGroup: groupName
     };
   }
 
@@ -188,48 +240,63 @@ export class ReportsService {
     const workbook = new ExcelJS.Workbook();
     
     if (resultsData.assessment.isSimulator) {
-      const sheet1 = workbook.addWorksheet('Simulador - Intentos');
-      sheet1.columns = [
-        { header: 'Estudiante', key: 'studentName', width: 30 },
-        { header: 'Cédula/Código', key: 'identifier', width: 20 },
-        { header: 'Email', key: 'email', width: 30 },
-        { header: 'Número de Intentos', key: 'attemptsCount', width: 20 }
-      ];
-      resultsData.results.forEach(r => {
-        const student: any = r.student || {};
-        sheet1.addRow({
-          studentName: student.name || 'N/A',
-          identifier: student.username || 'N/A',
-          email: student.email || 'N/A',
-          attemptsCount: r.attemptsCount
+        const sheet1 = workbook.addWorksheet('Simulador - Intentos');
+        sheet1.columns = [
+          { header: 'Estudiante', key: 'studentName', width: 30 },
+          { header: 'Cédula/Código', key: 'identifier', width: 20 },
+          { header: 'Grupo', key: 'group', width: 20 },
+          { header: 'Email', key: 'email', width: 30 },
+          { header: 'Número de Intentos', key: 'attemptsCount', width: 20 }
+        ];
+        resultsData.results.forEach(r => {
+          const student: any = r.student || {};
+          sheet1.addRow({
+            studentName: student.name || 'N/A',
+            identifier: student.username || 'N/A',
+            group: student.group || 'N/A',
+            email: student.email || 'N/A',
+            attemptsCount: r.attemptsCount
+          });
         });
-      });
     } else {
       const analyticsData = await this.getQuestionAnalytics(assessmentId, teacherId);
-      // Hoja 1: Calificaciones
-      const sheet1 = workbook.addWorksheet('Calificaciones');
-      sheet1.columns = [
-        { header: 'Estudiante', key: 'studentName', width: 30 },
-        { header: 'Cédula/Código', key: 'identifier', width: 20 },
-        { header: 'Email', key: 'email', width: 30 },
-        { header: 'Puntaje', key: 'score', width: 15 },
-        { header: 'Porcentaje (%)', key: 'percentage', width: 15 },
-        { header: 'Tiempo (min)', key: 'duration', width: 15 },
-        { header: 'Estado', key: 'status', width: 15 }
-      ];
+        // Hoja 1: Calificaciones
+        const sheet1 = workbook.addWorksheet('Calificaciones');
+        sheet1.columns = [
+          { header: 'Estudiante', key: 'studentName', width: 30 },
+          { header: 'Cédula/Código', key: 'identifier', width: 20 },
+          { header: 'Grupo', key: 'group', width: 20 },
+          { header: 'Email', key: 'email', width: 30 },
+          { header: 'Puntaje', key: 'score', width: 15 },
+          { header: 'Porcentaje (%)', key: 'percentage', width: 15 },
+          { header: 'Tiempo (min)', key: 'duration', width: 15 },
+          { header: 'Estado', key: 'status', width: 15 },
+          { header: 'Faltas / AntiTrampas', key: 'warnings', width: 30 }
+        ];
 
-      resultsData.results.forEach(r => {
-        const student: any = r.student || {};
-        sheet1.addRow({
-          studentName: student.name || 'N/A',
-          identifier: student.username || 'N/A',
-          email: student.email || 'N/A',
-          score: r.score,
-          percentage: r.percentage,
-          duration: r.durationMinutes,
-          status: r.percentage >= 70 ? 'Aprobado' : 'Reprobado'
+        resultsData.results.forEach(r => {
+          const student: any = r.student || {};
+          const isApproved = r.percentage >= 70;
+          
+          let warningsTxt = 'Sin advertencias';
+          if (r.outOfTime || r.isTimeout) warningsTxt = 'Cierre forzado/Exceso de tiempo';
+          else if (r.antiCheatLog) {
+            const sum = (r.antiCheatLog.tabSwitches || 0) + (r.antiCheatLog.fullscreenExits || 0);
+            if (sum > 0) warningsTxt = `Infracciones detectadas (${sum})`;
+          }
+
+          sheet1.addRow({
+            studentName: student.name || 'N/A',
+            identifier: student.username || 'N/A',
+            group: student.group || 'N/A',
+            email: student.email || 'N/A',
+            score: `${r.score} / ${r.maxScore}`,
+            percentage: r.percentage,
+            duration: r.durationMinutes,
+            status: isApproved ? 'Aprobado' : 'Reprobado',
+            warnings: warningsTxt
+          });
         });
-      });
 
       // Hoja 2: Análisis por Pregunta
       const sheet2 = workbook.addWorksheet('Análisis por Pregunta');

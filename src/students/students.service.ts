@@ -87,6 +87,16 @@ export class StudentsService {
     return student;
   }
 
+  async findByIdentifier(identifier: string): Promise<Student> {
+    return this.studentModel.findOne({ identifier }).populate('groupId', 'name').exec();
+  }
+
+  async findByIdentifiers(identifiers: string[]): Promise<Student[]> {
+    return this.studentModel.find({ identifier: { $in: identifiers } }).populate('groupId', 'name').exec();
+  }
+
+
+
   async update(id: string, updateStudentDto: UpdateStudentDto): Promise<Student> {
     const student = await this.studentModel.findById(id).exec();
     if (!student) {

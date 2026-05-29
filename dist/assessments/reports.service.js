@@ -19,10 +19,12 @@ const mongoose_2 = require("mongoose");
 const assessment_attempt_schema_1 = require("../assessment-attempts/assessment-attempt.schema");
 const assessment_schema_1 = require("./assessment.schema");
 const ExcelJS = require("exceljs");
+const students_service_1 = require("../students/students.service");
 let ReportsService = class ReportsService {
-    constructor(attemptModel, assessmentModel) {
+    constructor(attemptModel, assessmentModel, studentsService) {
         this.attemptModel = attemptModel;
         this.assessmentModel = assessmentModel;
+        this.studentsService = studentsService;
     }
     async getResults(assessmentId, teacherId) {
         const assessment = await this.assessmentModel.findOne({ _id: assessmentId, teacherId: new mongoose_2.Types.ObjectId(teacherId) });
@@ -34,7 +36,20 @@ let ReportsService = class ReportsService {
         })
             .populate('studentId', 'name username email')
             .sort({ score: -1 })
+            .lean()
             .exec();
+        const usernames = attempts.map(a => a.studentId && a.studentId.username).filter(Boolean);
+        const studentProfiles = await this.studentsService.findByIdentifiers(usernames);
+        const profileMap = new Map();
+        studentProfiles.forEach(profile => {
+            profileMap.set(profile.identifier, profile.groupId ? profile.groupId['name'] : 'N/A');
+        });
+        attempts.forEach(attempt => {
+            if (attempt.studentId) {
+                const username = attempt.studentId.username;
+                attempt.studentId.group = profileMap.get(username) || 'N/A';
+            }
+        });
         if (assessment.isSimulator) {
             const studentMap = new Map();
             attempts.filter(a => a.studentId != null).forEach(attempt => {
@@ -103,6 +118,35 @@ let ReportsService = class ReportsService {
                 aprobados
             },
             results: formattedAttempts
+        };
+    }
+    async getAttemptDetail(assessmentId, attemptId, teacherId) {
+        const assessment = await this.assessmentModel.findOne({ _id: assessmentId, teacherId: new mongoose_2.Types.ObjectId(teacherId) });
+        if (!assessment)
+            throw new common_1.NotFoundException('Examen no encontrado');
+        const attempt = await this.attemptModel.findOne({
+            _id: new mongoose_2.Types.ObjectId(attemptId),
+            assessmentId: new mongoose_2.Types.ObjectId(assessmentId),
+        }).populate('studentId', 'name username email')
+            .populate({
+            path: 'assessmentId',
+            select: 'startTime endTime teacherId title',
+            populate: { path: 'teacherId', select: 'name' }
+        })
+            .lean()
+            .exec();
+        if (!attempt)
+            throw new common_1.NotFoundException('Intento no encontrado');
+        let groupName = 'N/A';
+        if (attempt.studentId && attempt.studentId['username']) {
+            const studentProfile = await this.studentsService.findByIdentifier(attempt.studentId['username']);
+            if (studentProfile && studentProfile.groupId) {
+                groupName = studentProfile.groupId['name'] || 'N/A';
+            }
+        }
+        return {
+            ...attempt,
+            studentGroup: groupName
         };
     }
     async getQuestionAnalytics(assessmentId, teacherId) {
@@ -180,6 +224,7 @@ let ReportsService = class ReportsService {
             sheet1.columns = [
                 { header: 'Estudiante', key: 'studentName', width: 30 },
                 { header: 'Cédula/Código', key: 'identifier', width: 20 },
+                { header: 'Grupo', key: 'group', width: 20 },
                 { header: 'Email', key: 'email', width: 30 },
                 { header: 'Número de Intentos', key: 'attemptsCount', width: 20 }
             ];
@@ -188,6 +233,7 @@ let ReportsService = class ReportsService {
                 sheet1.addRow({
                     studentName: student.name || 'N/A',
                     identifier: student.username || 'N/A',
+                    group: student.group || 'N/A',
                     email: student.email || 'N/A',
                     attemptsCount: r.attemptsCount
                 });
@@ -199,22 +245,35 @@ let ReportsService = class ReportsService {
             sheet1.columns = [
                 { header: 'Estudiante', key: 'studentName', width: 30 },
                 { header: 'Cédula/Código', key: 'identifier', width: 20 },
+                { header: 'Grupo', key: 'group', width: 20 },
                 { header: 'Email', key: 'email', width: 30 },
                 { header: 'Puntaje', key: 'score', width: 15 },
                 { header: 'Porcentaje (%)', key: 'percentage', width: 15 },
                 { header: 'Tiempo (min)', key: 'duration', width: 15 },
-                { header: 'Estado', key: 'status', width: 15 }
+                { header: 'Estado', key: 'status', width: 15 },
+                { header: 'Faltas / AntiTrampas', key: 'warnings', width: 30 }
             ];
             resultsData.results.forEach(r => {
                 const student = r.student || {};
+                const isApproved = r.percentage >= 70;
+                let warningsTxt = 'Sin advertencias';
+                if (r.outOfTime || r.isTimeout)
+                    warningsTxt = 'Cierre forzado/Exceso de tiempo';
+                else if (r.antiCheatLog) {
+                    const sum = (r.antiCheatLog.tabSwitches || 0) + (r.antiCheatLog.fullscreenExits || 0);
+                    if (sum > 0)
+                        warningsTxt = `Infracciones detectadas (${sum})`;
+                }
                 sheet1.addRow({
                     studentName: student.name || 'N/A',
                     identifier: student.username || 'N/A',
+                    group: student.group || 'N/A',
                     email: student.email || 'N/A',
-                    score: r.score,
+                    score: `${r.score} / ${r.maxScore}`,
                     percentage: r.percentage,
                     duration: r.durationMinutes,
-                    status: r.percentage >= 70 ? 'Aprobado' : 'Reprobado'
+                    status: isApproved ? 'Aprobado' : 'Reprobado',
+                    warnings: warningsTxt
                 });
             });
             const sheet2 = workbook.addWorksheet('Análisis por Pregunta');
@@ -247,6 +306,7 @@ exports.ReportsService = ReportsService = __decorate([
     __param(0, (0, mongoose_1.InjectModel)(assessment_attempt_schema_1.AssessmentAttempt.name)),
     __param(1, (0, mongoose_1.InjectModel)(assessment_schema_1.Assessment.name)),
     __metadata("design:paramtypes", [mongoose_2.Model,
-        mongoose_2.Model])
+        mongoose_2.Model,
+        students_service_1.StudentsService])
 ], ReportsService);
 //# sourceMappingURL=reports.service.js.map

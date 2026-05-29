@@ -16,6 +16,12 @@ export class ReportsController {
     return this.reportsService.getResults(id, req.user.userId);
   }
 
+  @Get(':id/results/:attemptId')
+  @Roles('TEACHER', 'ADMIN', 'SUPERADMIN')
+  getAttemptDetail(@Param('id') id: string, @Param('attemptId') attemptId: string, @Request() req): Promise<any> {
+    return this.reportsService.getAttemptDetail(id, attemptId, req.user.userId);
+  }
+
   @Get(':id/analytics')
   @Roles('TEACHER', 'ADMIN', 'SUPERADMIN')
   getQuestionAnalytics(@Param('id') id: string, @Request() req) {

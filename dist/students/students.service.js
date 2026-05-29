@@ -75,6 +75,12 @@ let StudentsService = class StudentsService {
         }
         return student;
     }
+    async findByIdentifier(identifier) {
+        return this.studentModel.findOne({ identifier }).populate('groupId', 'name').exec();
+    }
+    async findByIdentifiers(identifiers) {
+        return this.studentModel.find({ identifier: { $in: identifiers } }).populate('groupId', 'name').exec();
+    }
     async update(id, updateStudentDto) {
         const student = await this.studentModel.findById(id).exec();
         if (!student) {

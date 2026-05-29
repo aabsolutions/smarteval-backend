@@ -16,6 +16,7 @@ export declare class ReportsController {
         };
         results: any[];
     }>;
+    getAttemptDetail(id: string, attemptId: string, req: any): Promise<any>;
     getQuestionAnalytics(id: string, req: any): Promise<{
         statement: string;
         type: string;

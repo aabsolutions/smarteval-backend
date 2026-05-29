@@ -25,6 +25,9 @@ let ReportsController = class ReportsController {
     getResults(id, req) {
         return this.reportsService.getResults(id, req.user.userId);
     }
+    getAttemptDetail(id, attemptId, req) {
+        return this.reportsService.getAttemptDetail(id, attemptId, req.user.userId);
+    }
     getQuestionAnalytics(id, req) {
         return this.reportsService.getQuestionAnalytics(id, req.user.userId);
     }
@@ -42,6 +45,16 @@ __decorate([
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", void 0)
 ], ReportsController.prototype, "getResults", null);
+__decorate([
+    (0, common_1.Get)(':id/results/:attemptId'),
+    (0, roles_decorator_1.Roles)('TEACHER', 'ADMIN', 'SUPERADMIN'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Param)('attemptId')),
+    __param(2, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String, Object]),
+    __metadata("design:returntype", Promise)
+], ReportsController.prototype, "getAttemptDetail", null);
 __decorate([
     (0, common_1.Get)(':id/analytics'),
     (0, roles_decorator_1.Roles)('TEACHER', 'ADMIN', 'SUPERADMIN'),

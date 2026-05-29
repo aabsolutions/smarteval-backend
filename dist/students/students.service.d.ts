@@ -14,6 +14,8 @@ export declare class StudentsService {
     create(createStudentDto: CreateStudentDto): Promise<Student>;
     findAll(): Promise<Student[]>;
     findOne(id: string): Promise<Student>;
+    findByIdentifier(identifier: string): Promise<Student>;
+    findByIdentifiers(identifiers: string[]): Promise<Student[]>;
     update(id: string, updateStudentDto: UpdateStudentDto): Promise<Student>;
     remove(id: string): Promise<Student>;
     createBulk(createStudentDtos: CreateStudentDto[]): Promise<Student[]>;
