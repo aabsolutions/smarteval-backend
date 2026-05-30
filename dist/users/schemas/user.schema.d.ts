@@ -8,6 +8,7 @@ export declare class User extends Document {
     password?: string;
     name: string;
     email: string;
+    cedula: string;
     roles: Role[];
     permissions: string[];
     avatar: string;

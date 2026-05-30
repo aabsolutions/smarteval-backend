@@ -26,6 +26,9 @@ export class User extends Document {
   @Prop({ unique: true, index: true, sparse: true })
   email: string;
 
+  @Prop({ unique: true, sparse: true })
+  cedula: string;
+
   @Prop({ type: [RoleSchema], required: true })
   roles: Role[];
 

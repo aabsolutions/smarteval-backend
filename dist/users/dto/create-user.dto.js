@@ -42,6 +42,11 @@ __decorate([
     __metadata("design:type", String)
 ], CreateUserDto.prototype, "name", void 0);
 __decorate([
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], CreateUserDto.prototype, "cedula", void 0);
+__decorate([
     (0, class_validator_1.ValidateIf)(o => o.email !== ''),
     (0, class_validator_1.IsEmail)(),
     (0, class_validator_1.IsOptional)(),

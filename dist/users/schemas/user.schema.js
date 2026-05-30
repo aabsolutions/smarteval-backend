@@ -47,6 +47,10 @@ __decorate([
     __metadata("design:type", String)
 ], User.prototype, "email", void 0);
 __decorate([
+    (0, mongoose_1.Prop)({ unique: true, sparse: true }),
+    __metadata("design:type", String)
+], User.prototype, "cedula", void 0);
+__decorate([
     (0, mongoose_1.Prop)({ type: [RoleSchema], required: true }),
     __metadata("design:type", Array)
 ], User.prototype, "roles", void 0);

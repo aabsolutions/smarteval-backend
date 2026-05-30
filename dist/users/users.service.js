@@ -18,9 +18,11 @@ const mongoose_1 = require("@nestjs/mongoose");
 const mongoose_2 = require("mongoose");
 const bcrypt = require("bcryptjs");
 const user_schema_1 = require("./schemas/user.schema");
+const notifications_service_1 = require("../notifications/notifications.service");
 let UsersService = class UsersService {
-    constructor(userModel) {
+    constructor(userModel, notificationsService) {
         this.userModel = userModel;
+        this.notificationsService = notificationsService;
     }
     async onModuleInit() {
         await this.seedUsers();
@@ -31,8 +33,14 @@ let UsersService = class UsersService {
     async findById(id) {
         return this.userModel.findById(id).select('-password').exec();
     }
-    async findAll(allowedRoles) {
-        return this.userModel.find({ 'roles.name': { $in: allowedRoles } }).select('-password').exec();
+    async findAll(allowedRoles, page = 1, limit = 10) {
+        const query = { 'roles.name': { $in: allowedRoles } };
+        const skip = (page - 1) * limit;
+        const [data, total] = await Promise.all([
+            this.userModel.find(query).select('-password').skip(skip).limit(limit).exec(),
+            this.userModel.countDocuments(query).exec()
+        ]);
+        return { data, total };
     }
     async update(id, updateData) {
         if (updateData.password) {
@@ -47,6 +55,30 @@ let UsersService = class UsersService {
     }
     async delete(id) {
         return this.userModel.findByIdAndDelete(id).exec();
+    }
+    async resetPassword(id) {
+        const user = await this.userModel.findById(id).exec();
+        if (!user)
+            throw new common_1.NotFoundException('User not found');
+        if (!user.username)
+            throw new common_1.BadRequestException('User does not have a username registered');
+        const newPassword = await bcrypt.hash(user.username, 10);
+        user.password = newPassword;
+        await user.save();
+        await this.notificationsService.create(id, 'Contraseña reseteada', 'Tu contraseña ha sido reseteada a tu nombre de usuario. Por tu seguridad, por favor cámbiala inmediatamente en tu perfil.', 'WARNING');
+        return { success: true, message: 'Password reset successfully' };
+    }
+    async changePassword(userId, currentPass, newPass) {
+        const user = await this.userModel.findById(userId).exec();
+        if (!user)
+            throw new common_1.NotFoundException('User not found');
+        const isMatch = await bcrypt.compare(currentPass, user.password || '');
+        if (!isMatch) {
+            throw new common_1.BadRequestException('La contraseña actual es incorrecta');
+        }
+        user.password = await bcrypt.hash(newPass, 10);
+        await user.save();
+        return { success: true, message: 'Password changed successfully' };
     }
     async create(userData) {
         const hashedPassword = await bcrypt.hash(userData.password, 10);
@@ -116,6 +148,7 @@ exports.UsersService = UsersService;
 exports.UsersService = UsersService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, mongoose_1.InjectModel)(user_schema_1.User.name)),
-    __metadata("design:paramtypes", [mongoose_2.Model])
+    __metadata("design:paramtypes", [mongoose_2.Model,
+        notifications_service_1.NotificationsService])
 ], UsersService);
 //# sourceMappingURL=users.service.js.map

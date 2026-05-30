@@ -146,8 +146,8 @@ let StudentsService = class StudentsService {
     async getUsersForGroups(groupIds) {
         const students = await this.studentModel.find({ groupId: { $in: groupIds } }).exec();
         const identifiers = students.map(s => s.identifier);
-        const users = await this.usersService.findAll(['STUDENT']);
-        return users.filter(u => identifiers.includes(u.username));
+        const users = await this.usersService.findAll(['STUDENT'], 1, 10000);
+        return users.data.filter(u => identifiers.includes(u.username));
     }
 };
 exports.StudentsService = StudentsService;

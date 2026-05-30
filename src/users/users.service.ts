@@ -1,13 +1,15 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { Injectable, OnModuleInit, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import * as bcrypt from 'bcryptjs';
 import { User } from './schemas/user.schema';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class UsersService implements OnModuleInit {
   constructor(
     @InjectModel(User.name) private readonly userModel: Model<User>,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   async onModuleInit() {
@@ -22,8 +24,16 @@ export class UsersService implements OnModuleInit {
     return this.userModel.findById(id).select('-password').exec();
   }
 
-  async findAll(allowedRoles: string[]): Promise<User[]> {
-    return this.userModel.find({ 'roles.name': { $in: allowedRoles } }).select('-password').exec();
+  async findAll(allowedRoles: string[], page: number = 1, limit: number = 10): Promise<{ data: User[], total: number }> {
+    const query = { 'roles.name': { $in: allowedRoles } };
+    const skip = (page - 1) * limit;
+    
+    const [data, total] = await Promise.all([
+      this.userModel.find(query).select('-password').skip(skip).limit(limit).exec(),
+      this.userModel.countDocuments(query).exec()
+    ]);
+    
+    return { data, total };
   }
 
   async update(id: string, updateData: any): Promise<User | null> {
@@ -43,6 +53,41 @@ export class UsersService implements OnModuleInit {
 
   async delete(id: string): Promise<User | null> {
     return this.userModel.findByIdAndDelete(id).exec();
+  }
+
+  async resetPassword(id: string): Promise<any> {
+    const user = await this.userModel.findById(id).exec();
+    if (!user) throw new NotFoundException('User not found');
+    if (!user.username) throw new BadRequestException('User does not have a username registered');
+    
+    const newPassword = await bcrypt.hash(user.username, 10);
+    user.password = newPassword;
+    await user.save();
+    
+    await this.notificationsService.create(
+      id,
+      'Contraseña reseteada',
+      'Tu contraseña ha sido reseteada a tu nombre de usuario. Por tu seguridad, por favor cámbiala inmediatamente en tu perfil.',
+      'WARNING'
+    );
+    
+    return { success: true, message: 'Password reset successfully' };
+  }
+
+  async changePassword(userId: string, currentPass: string, newPass: string): Promise<any> {
+    const user = await this.userModel.findById(userId).exec();
+    if (!user) throw new NotFoundException('User not found');
+    
+    const isMatch = await bcrypt.compare(currentPass, user.password || '');
+    if (!isMatch) {
+      // Usando BadRequest porque Unauthorized es para fallos de JWT genéricos, pero throw Error funciona si no importé UnauthorizedException
+      throw new BadRequestException('La contraseña actual es incorrecta');
+    }
+    
+    user.password = await bcrypt.hash(newPass, 10);
+    await user.save();
+    
+    return { success: true, message: 'Password changed successfully' };
   }
 
   async create(userData: any): Promise<User> {

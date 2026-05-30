@@ -24,12 +24,12 @@ let UsersController = class UsersController {
     constructor(usersService) {
         this.usersService = usersService;
     }
-    async findAll(req) {
+    async findAll(req, page = '1', limit = '10') {
         const userRole = req.user.roles[0].name;
         const allowedRoles = userRole === 'SUPERADMIN'
             ? ['SUPERADMIN', 'ADMIN', 'TEACHER', 'STUDENT']
             : ['TEACHER', 'STUDENT'];
-        return this.usersService.findAll(allowedRoles);
+        return this.usersService.findAll(allowedRoles, parseInt(page), parseInt(limit));
     }
     async findOne(id, req) {
         const user = await this.usersService.findById(id);
@@ -60,6 +60,24 @@ let UsersController = class UsersController {
         this.checkPermissions(req.user.roles[0].name, user.roles[0].name);
         return this.usersService.delete(id);
     }
+    async resetPassword(id, req) {
+        const user = await this.usersService.findById(id);
+        if (!user)
+            throw new common_1.NotFoundException('User not found');
+        this.checkPermissions(req.user.roles[0].name, user.roles[0].name);
+        return this.usersService.resetPassword(id);
+    }
+    async updateProfile(updateData, req) {
+        const userId = req.user.sub || req.user.id || req.user._id;
+        delete updateData.roles;
+        delete updateData.cedula;
+        delete updateData.password;
+        return this.usersService.update(userId, updateData);
+    }
+    async changePassword(passData, req) {
+        const userId = req.user.sub || req.user.id || req.user._id;
+        return this.usersService.changePassword(userId, passData.currentPassword, passData.newPassword);
+    }
     checkPermissions(requesterRole, targetRole) {
         if (requesterRole === 'SUPERADMIN') {
             return true;
@@ -78,8 +96,10 @@ __decorate([
     (0, roles_decorator_1.Roles)('SUPERADMIN', 'ADMIN'),
     (0, common_1.Get)(),
     __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Query)('page')),
+    __param(2, (0, common_1.Query)('limit')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
+    __metadata("design:paramtypes", [Object, String, String]),
     __metadata("design:returntype", Promise)
 ], UsersController.prototype, "findAll", null);
 __decorate([
@@ -119,6 +139,31 @@ __decorate([
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", Promise)
 ], UsersController.prototype, "remove", null);
+__decorate([
+    (0, roles_decorator_1.Roles)('SUPERADMIN', 'ADMIN'),
+    (0, common_1.Post)(':id/reset-password'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", Promise)
+], UsersController.prototype, "resetPassword", null);
+__decorate([
+    (0, common_1.Put)('me/profile'),
+    __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", Promise)
+], UsersController.prototype, "updateProfile", null);
+__decorate([
+    (0, common_1.Put)('me/change-password'),
+    __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", Promise)
+], UsersController.prototype, "changePassword", null);
 exports.UsersController = UsersController = __decorate([
     (0, common_1.Controller)('users'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),

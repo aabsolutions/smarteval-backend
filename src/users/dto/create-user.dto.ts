@@ -23,6 +23,10 @@ export class CreateUserDto {
   @IsNotEmpty()
   name: string;
 
+  @IsString()
+  @IsOptional()
+  cedula?: string;
+
   @ValidateIf(o => o.email !== '')
   @IsEmail()
   @IsOptional()

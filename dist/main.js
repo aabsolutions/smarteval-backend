@@ -19,8 +19,8 @@ async function bootstrap() {
     }));
     app.useGlobalFilters(new http_exception_filter_1.HttpExceptionFilter());
     const port = process.env.PORT || 3000;
-    await app.listen(port);
-    console.log(`NestJS backend corriendo en: http://localhost:${port}/api`);
+    await app.listen(port, '0.0.0.0');
+    console.log(`NestJS backend corriendo en puerto: ${port}`);
 }
 bootstrap();
 //# sourceMappingURL=main.js.map

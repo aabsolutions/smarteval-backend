@@ -8,6 +8,7 @@ import {
   Delete,
   UseGuards,
   Request,
+  Query,
   ForbiddenException,
   NotFoundException,
 } from '@nestjs/common';
@@ -25,14 +26,14 @@ export class UsersController {
 
   @Roles('SUPERADMIN', 'ADMIN')
   @Get()
-  async findAll(@Request() req: any) {
+  async findAll(@Request() req: any, @Query('page') page: string = '1', @Query('limit') limit: string = '10') {
     const userRole = req.user.roles[0].name;
     // SUPERADMIN can see everyone. ADMIN can only see TEACHER and STUDENT.
     const allowedRoles = userRole === 'SUPERADMIN' 
       ? ['SUPERADMIN', 'ADMIN', 'TEACHER', 'STUDENT'] 
       : ['TEACHER', 'STUDENT'];
     
-    return this.usersService.findAll(allowedRoles);
+    return this.usersService.findAll(allowedRoles, parseInt(page), parseInt(limit));
   }
 
   @Roles('SUPERADMIN', 'ADMIN')
@@ -79,6 +80,35 @@ export class UsersController {
     this.checkPermissions(req.user.roles[0].name, user.roles[0].name);
     
     return this.usersService.delete(id);
+  }
+
+  @Roles('SUPERADMIN', 'ADMIN')
+  @Post(':id/reset-password')
+  async resetPassword(@Param('id') id: string, @Request() req: any) {
+    const user = await this.usersService.findById(id);
+    if (!user) throw new NotFoundException('User not found');
+
+    this.checkPermissions(req.user.roles[0].name, user.roles[0].name);
+
+    return this.usersService.resetPassword(id);
+  }
+
+  // Endpoints for regular users to manage their own profile
+  @Put('me/profile')
+  async updateProfile(@Body() updateData: any, @Request() req: any) {
+    const userId = req.user.sub || req.user.id || req.user._id;
+    // Evitar que actualicen su rol o su cedula
+    delete updateData.roles;
+    delete updateData.cedula;
+    delete updateData.password;
+    
+    return this.usersService.update(userId, updateData);
+  }
+
+  @Put('me/change-password')
+  async changePassword(@Body() passData: any, @Request() req: any) {
+    const userId = req.user.sub || req.user.id || req.user._id;
+    return this.usersService.changePassword(userId, passData.currentPassword, passData.newPassword);
   }
 
   /**
