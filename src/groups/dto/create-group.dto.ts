@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsOptional, IsArray } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsEnum } from 'class-validator';
 
 export class CreateGroupDto {
   @IsString()
@@ -9,8 +9,18 @@ export class CreateGroupDto {
   @IsOptional()
   description?: string;
 
-  @IsArray()
-  @IsString({ each: true })
+  @IsString()
+  @IsNotEmpty()
+  institution: string;
+
+  @IsEnum(['MATUTINA', 'VESPERTINA', 'NOCTURNA', 'VIRTUAL'])
+  @IsNotEmpty()
+  jornada: string;
+
+  @IsEnum(['EGB MEDIA', 'EGB SUPERIOR', 'BACHILLERATO', 'SUPERIOR'])
+  @IsNotEmpty()
+  nivel: string;
+
   @IsOptional()
-  teachers?: string[];
+  teacher?: string | null;
 }

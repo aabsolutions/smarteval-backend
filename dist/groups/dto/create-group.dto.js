@@ -25,9 +25,22 @@ __decorate([
     __metadata("design:type", String)
 ], CreateGroupDto.prototype, "description", void 0);
 __decorate([
-    (0, class_validator_1.IsArray)(),
-    (0, class_validator_1.IsString)({ each: true }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", String)
+], CreateGroupDto.prototype, "institution", void 0);
+__decorate([
+    (0, class_validator_1.IsEnum)(['MATUTINA', 'VESPERTINA', 'NOCTURNA', 'VIRTUAL']),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", String)
+], CreateGroupDto.prototype, "jornada", void 0);
+__decorate([
+    (0, class_validator_1.IsEnum)(['EGB MEDIA', 'EGB SUPERIOR', 'BACHILLERATO', 'SUPERIOR']),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", String)
+], CreateGroupDto.prototype, "nivel", void 0);
+__decorate([
     (0, class_validator_1.IsOptional)(),
-    __metadata("design:type", Array)
-], CreateGroupDto.prototype, "teachers", void 0);
+    __metadata("design:type", String)
+], CreateGroupDto.prototype, "teacher", void 0);
 //# sourceMappingURL=create-group.dto.js.map

@@ -2,6 +2,7 @@ import { Controller, Get, Post, Body, Put, Param, Delete, UseGuards, Request } f
 import { GroupsService } from './groups.service';
 import { CreateGroupDto } from './dto/create-group.dto';
 import { UpdateGroupDto } from './dto/update-group.dto';
+import { AssignTeacherDto } from './dto/assign-teacher.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -22,7 +23,8 @@ export class GroupsController {
   findAll(@Request() req: any) {
     const userId = req.user.userId;
     const userRole = req.user.roles[0].name;
-    return this.groupsService.findAll(userId, userRole);
+    const username = req.user.username;
+    return this.groupsService.findAll(userId, userRole, username);
   }
 
   @Get(':id')
@@ -41,5 +43,11 @@ export class GroupsController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.groupsService.remove(id);
+  }
+
+  @Roles('SUPERADMIN', 'ADMIN')
+  @Post(':id/assign-teacher')
+  assignTeacher(@Param('id') id: string, @Body() assignTeacherDto: AssignTeacherDto) {
+    return this.groupsService.assignTeacher(id, assignTeacherDto.teacherId);
   }
 }

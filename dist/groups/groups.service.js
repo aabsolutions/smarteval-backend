@@ -17,9 +17,11 @@ const common_1 = require("@nestjs/common");
 const mongoose_1 = require("@nestjs/mongoose");
 const mongoose_2 = require("mongoose");
 const group_schema_1 = require("./schemas/group.schema");
+const teachers_service_1 = require("../teachers/teachers.service");
 let GroupsService = class GroupsService {
-    constructor(groupModel) {
+    constructor(groupModel, teachersService) {
         this.groupModel = groupModel;
+        this.teachersService = teachersService;
     }
     async create(createGroupDto, userId) {
         const createdGroup = new this.groupModel({
@@ -28,20 +30,29 @@ let GroupsService = class GroupsService {
         });
         return createdGroup.save();
     }
-    async findAll(userId, userRole) {
+    async findAll(userId, userRole, username) {
         const query = {};
-        if (userRole === 'TEACHER') {
-            query.teachers = userId;
+        if (userRole === 'TEACHER' && username) {
+            const teachers = await this.teachersService.findAll();
+            const teacher = teachers.find(t => t.identifier === username);
+            if (teacher) {
+                query.teacher = teacher._id;
+            }
+            else {
+                return [];
+            }
         }
         return this.groupModel.find(query)
             .populate('createdBy', 'name email')
-            .populate('teachers', 'name email')
+            .populate('teacher', 'name email')
+            .populate('institution', 'name')
             .exec();
     }
     async findOne(id) {
         const group = await this.groupModel.findById(id)
             .populate('createdBy', 'name email')
-            .populate('teachers', 'name email')
+            .populate('teacher', 'name email')
+            .populate('institution', 'name')
             .exec();
         if (!group) {
             throw new common_1.NotFoundException(`Grupo con ID ${id} no encontrado`);
@@ -64,11 +75,21 @@ let GroupsService = class GroupsService {
         }
         return deletedGroup;
     }
+    async assignTeacher(groupId, teacherId) {
+        const updatedGroup = await this.groupModel
+            .findByIdAndUpdate(groupId, { teacher: teacherId }, { new: true })
+            .exec();
+        if (!updatedGroup) {
+            throw new common_1.NotFoundException(`Grupo con ID ${groupId} no encontrado`);
+        }
+        return updatedGroup;
+    }
 };
 exports.GroupsService = GroupsService;
 exports.GroupsService = GroupsService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, mongoose_1.InjectModel)(group_schema_1.Group.name)),
-    __metadata("design:paramtypes", [mongoose_2.Model])
+    __metadata("design:paramtypes", [mongoose_2.Model,
+        teachers_service_1.TeachersService])
 ], GroupsService);
 //# sourceMappingURL=groups.service.js.map

@@ -3,7 +3,10 @@ export declare class Group extends Document {
     name: string;
     description: string;
     createdBy: MongooseSchema.Types.ObjectId;
-    teachers: MongooseSchema.Types.ObjectId[];
+    institution: MongooseSchema.Types.ObjectId;
+    jornada: string;
+    nivel: string;
+    teacher: MongooseSchema.Types.ObjectId | null;
 }
 export declare const GroupSchema: MongooseSchema<Group, import("mongoose").Model<Group, any, any, any, Document<unknown, any, Group, any, {}> & Group & Required<{
     _id: import("mongoose").Types.ObjectId;

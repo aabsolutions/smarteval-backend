@@ -10,6 +10,8 @@ import { QuestionsModule } from './questions/questions.module';
 import { AssessmentsModule } from './assessments/assessments.module';
 import { AssessmentAttemptsModule } from './assessment-attempts/assessment-attempts.module';
 import { NotificationsModule } from './notifications/notifications.module';
+import { InstitutionsModule } from './institutions/institutions.module';
+import { TeachersModule } from './teachers/teachers.module';
 
 @Module({
   imports: [
@@ -42,6 +44,8 @@ import { NotificationsModule } from './notifications/notifications.module';
     AssessmentsModule,
     AssessmentAttemptsModule,
     NotificationsModule,
+    InstitutionsModule,
+    TeachersModule,
   ],
 })
 export class AppModule {}

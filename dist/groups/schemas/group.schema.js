@@ -28,9 +28,21 @@ __decorate([
     __metadata("design:type", mongoose_2.Schema.Types.ObjectId)
 ], Group.prototype, "createdBy", void 0);
 __decorate([
-    (0, mongoose_1.Prop)({ type: [{ type: mongoose_2.Schema.Types.ObjectId, ref: 'User' }], default: [] }),
-    __metadata("design:type", Array)
-], Group.prototype, "teachers", void 0);
+    (0, mongoose_1.Prop)({ type: mongoose_2.Schema.Types.ObjectId, ref: 'Institution', required: true }),
+    __metadata("design:type", mongoose_2.Schema.Types.ObjectId)
+], Group.prototype, "institution", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ required: true, enum: ['MATUTINA', 'VESPERTINA', 'NOCTURNA', 'VIRTUAL'] }),
+    __metadata("design:type", String)
+], Group.prototype, "jornada", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ required: true, enum: ['EGB MEDIA', 'EGB SUPERIOR', 'BACHILLERATO', 'SUPERIOR'] }),
+    __metadata("design:type", String)
+], Group.prototype, "nivel", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: mongoose_2.Schema.Types.ObjectId, ref: 'Teacher', default: null }),
+    __metadata("design:type", mongoose_2.Schema.Types.ObjectId)
+], Group.prototype, "teacher", void 0);
 exports.Group = Group = __decorate([
     (0, mongoose_1.Schema)({ timestamps: true })
 ], Group);

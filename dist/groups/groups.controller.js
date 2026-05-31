@@ -17,6 +17,7 @@ const common_1 = require("@nestjs/common");
 const groups_service_1 = require("./groups.service");
 const create_group_dto_1 = require("./dto/create-group.dto");
 const update_group_dto_1 = require("./dto/update-group.dto");
+const assign_teacher_dto_1 = require("./dto/assign-teacher.dto");
 const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
 const roles_guard_1 = require("../auth/guards/roles.guard");
 const roles_decorator_1 = require("../auth/decorators/roles.decorator");
@@ -30,7 +31,8 @@ let GroupsController = class GroupsController {
     findAll(req) {
         const userId = req.user.userId;
         const userRole = req.user.roles[0].name;
-        return this.groupsService.findAll(userId, userRole);
+        const username = req.user.username;
+        return this.groupsService.findAll(userId, userRole, username);
     }
     findOne(id) {
         return this.groupsService.findOne(id);
@@ -40,6 +42,9 @@ let GroupsController = class GroupsController {
     }
     remove(id) {
         return this.groupsService.remove(id);
+    }
+    assignTeacher(id, assignTeacherDto) {
+        return this.groupsService.assignTeacher(id, assignTeacherDto.teacherId);
     }
 };
 exports.GroupsController = GroupsController;
@@ -84,6 +89,15 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], GroupsController.prototype, "remove", null);
+__decorate([
+    (0, roles_decorator_1.Roles)('SUPERADMIN', 'ADMIN'),
+    (0, common_1.Post)(':id/assign-teacher'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, assign_teacher_dto_1.AssignTeacherDto]),
+    __metadata("design:returntype", void 0)
+], GroupsController.prototype, "assignTeacher", null);
 exports.GroupsController = GroupsController = __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
     (0, common_1.Controller)('groups'),

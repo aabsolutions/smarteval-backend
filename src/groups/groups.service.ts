@@ -4,10 +4,14 @@ import { Model } from 'mongoose';
 import { CreateGroupDto } from './dto/create-group.dto';
 import { UpdateGroupDto } from './dto/update-group.dto';
 import { Group } from './schemas/group.schema';
+import { TeachersService } from '../teachers/teachers.service';
 
 @Injectable()
 export class GroupsService {
-  constructor(@InjectModel(Group.name) private groupModel: Model<Group>) {}
+  constructor(
+    @InjectModel(Group.name) private groupModel: Model<Group>,
+    private teachersService: TeachersService,
+  ) {}
 
   async create(createGroupDto: CreateGroupDto, userId: string): Promise<Group> {
     const createdGroup = new this.groupModel({
@@ -17,21 +21,31 @@ export class GroupsService {
     return createdGroup.save();
   }
 
-  async findAll(userId?: string, userRole?: string): Promise<Group[]> {
+  async findAll(userId?: string, userRole?: string, username?: string): Promise<Group[]> {
     const query: any = {};
-    if (userRole === 'TEACHER') {
-      query.teachers = userId;
+    if (userRole === 'TEACHER' && username) {
+      // Find the teacher by their username (identifier)
+      const teachers = await this.teachersService.findAll();
+      const teacher = teachers.find(t => t.identifier === username);
+      if (teacher) {
+        query.teacher = teacher._id;
+      } else {
+        // If teacher document doesn't exist, return empty array
+        return [];
+      }
     }
     return this.groupModel.find(query)
       .populate('createdBy', 'name email')
-      .populate('teachers', 'name email')
+      .populate('teacher', 'name email')
+      .populate('institution', 'name')
       .exec();
   }
 
   async findOne(id: string): Promise<Group> {
     const group = await this.groupModel.findById(id)
       .populate('createdBy', 'name email')
-      .populate('teachers', 'name email')
+      .populate('teacher', 'name email')
+      .populate('institution', 'name')
       .exec();
     if (!group) {
       throw new NotFoundException(`Grupo con ID ${id} no encontrado`);
@@ -55,5 +69,15 @@ export class GroupsService {
       throw new NotFoundException(`Grupo con ID ${id} no encontrado`);
     }
     return deletedGroup;
+  }
+
+  async assignTeacher(groupId: string, teacherId: string): Promise<Group> {
+    const updatedGroup = await this.groupModel
+      .findByIdAndUpdate(groupId, { teacher: teacherId }, { new: true })
+      .exec();
+    if (!updatedGroup) {
+      throw new NotFoundException(`Grupo con ID ${groupId} no encontrado`);
+    }
+    return updatedGroup;
   }
 }

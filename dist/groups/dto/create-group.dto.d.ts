@@ -1,5 +1,8 @@
 export declare class CreateGroupDto {
     name: string;
     description?: string;
-    teachers?: string[];
+    institution: string;
+    jornada: string;
+    nivel: string;
+    teacher?: string | null;
 }

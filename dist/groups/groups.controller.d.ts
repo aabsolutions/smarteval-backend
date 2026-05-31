@@ -1,6 +1,7 @@
 import { GroupsService } from './groups.service';
 import { CreateGroupDto } from './dto/create-group.dto';
 import { UpdateGroupDto } from './dto/update-group.dto';
+import { AssignTeacherDto } from './dto/assign-teacher.dto';
 export declare class GroupsController {
     private readonly groupsService;
     constructor(groupsService: GroupsService);
@@ -9,4 +10,5 @@ export declare class GroupsController {
     findOne(id: string): Promise<import("./schemas/group.schema").Group>;
     update(id: string, updateGroupDto: UpdateGroupDto): Promise<import("./schemas/group.schema").Group>;
     remove(id: string): Promise<import("./schemas/group.schema").Group>;
+    assignTeacher(id: string, assignTeacherDto: AssignTeacherDto): Promise<import("./schemas/group.schema").Group>;
 }

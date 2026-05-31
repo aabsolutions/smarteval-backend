@@ -9,6 +9,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.GroupsModule = void 0;
 const common_1 = require("@nestjs/common");
 const mongoose_1 = require("@nestjs/mongoose");
+const teachers_module_1 = require("../teachers/teachers.module");
 const groups_service_1 = require("./groups.service");
 const groups_controller_1 = require("./groups.controller");
 const group_schema_1 = require("./schemas/group.schema");
@@ -17,7 +18,10 @@ let GroupsModule = class GroupsModule {
 exports.GroupsModule = GroupsModule;
 exports.GroupsModule = GroupsModule = __decorate([
     (0, common_1.Module)({
-        imports: [mongoose_1.MongooseModule.forFeature([{ name: group_schema_1.Group.name, schema: group_schema_1.GroupSchema }])],
+        imports: [
+            mongoose_1.MongooseModule.forFeature([{ name: group_schema_1.Group.name, schema: group_schema_1.GroupSchema }]),
+            teachers_module_1.TeachersModule,
+        ],
         controllers: [groups_controller_1.GroupsController],
         providers: [groups_service_1.GroupsService],
         exports: [groups_service_1.GroupsService],

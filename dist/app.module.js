@@ -19,6 +19,8 @@ const questions_module_1 = require("./questions/questions.module");
 const assessments_module_1 = require("./assessments/assessments.module");
 const assessment_attempts_module_1 = require("./assessment-attempts/assessment-attempts.module");
 const notifications_module_1 = require("./notifications/notifications.module");
+const institutions_module_1 = require("./institutions/institutions.module");
+const teachers_module_1 = require("./teachers/teachers.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -49,6 +51,8 @@ exports.AppModule = AppModule = __decorate([
             assessments_module_1.AssessmentsModule,
             assessment_attempts_module_1.AssessmentAttemptsModule,
             notifications_module_1.NotificationsModule,
+            institutions_module_1.InstitutionsModule,
+            teachers_module_1.TeachersModule,
         ],
     })
 ], AppModule);
