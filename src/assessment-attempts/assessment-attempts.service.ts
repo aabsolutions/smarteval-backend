@@ -72,13 +72,24 @@ export class AssessmentAttemptsService {
       maxScore += q.points || 1;
       
       let options = q.options || [];
+      let correctAnswers = q.correctAnswers || [];
+
       if (assessment.shuffleOptions && options.length > 0) {
-        options = [...options].sort(() => Math.random() - 0.5);
+        if (q.type !== 'matching') {
+          options = [...options].sort(() => Math.random() - 0.5);
+        }
       }
 
       let matchingOptions = [];
-      if (q.type === 'matching' && q.correctAnswers) {
-        matchingOptions = [...q.correctAnswers].sort(() => Math.random() - 0.5);
+      if (q.type === 'matching' && correctAnswers.length > 0) {
+        matchingOptions = [...correctAnswers];
+        // Fisher-Yates shuffle for robust randomization of right column
+        for (let i = matchingOptions.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          const temp = matchingOptions[i];
+          matchingOptions[i] = matchingOptions[j];
+          matchingOptions[j] = temp;
+        }
       }
 
       return {
@@ -86,7 +97,7 @@ export class AssessmentAttemptsService {
         type: q.type,
         statement: q.statement,
         options: options,
-        correctAnswers: q.correctAnswers || [],
+        correctAnswers: correctAnswers,
         matchingOptions: matchingOptions,
         points: q.points || 1
       };
@@ -166,6 +177,9 @@ export class AssessmentAttemptsService {
         }
         if (correctPairs > 0) {
           score += (correctPairs / totalPairs) * q.points;
+          if (correctPairs === totalPairs) {
+            isCorrect = true;
+          }
         }
       }
 
