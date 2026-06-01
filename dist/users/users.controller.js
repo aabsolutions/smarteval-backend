@@ -68,14 +68,14 @@ let UsersController = class UsersController {
         return this.usersService.resetPassword(id);
     }
     async updateProfile(updateData, req) {
-        const userId = req.user.sub || req.user.id || req.user._id;
+        const userId = req.user.userId || req.user.sub || req.user.id || req.user._id;
         delete updateData.roles;
         delete updateData.cedula;
         delete updateData.password;
         return this.usersService.update(userId, updateData);
     }
     async changePassword(passData, req) {
-        const userId = req.user.sub || req.user.id || req.user._id;
+        const userId = req.user.userId || req.user.sub || req.user.id || req.user._id;
         return this.usersService.changePassword(userId, passData.currentPassword, passData.newPassword);
     }
     checkPermissions(requesterRole, targetRole) {

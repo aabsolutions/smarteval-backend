@@ -53,7 +53,7 @@ export class TeachersService {
   }
 
   async findAll(): Promise<Teacher[]> {
-    return this.teacherModel.find().exec();
+    return this.teacherModel.find().sort({ name: 1 }).exec();
   }
 
   async findOne(id: string): Promise<Teacher> {

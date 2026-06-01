@@ -20,8 +20,9 @@ const bcrypt = require("bcryptjs");
 const user_schema_1 = require("./schemas/user.schema");
 const notifications_service_1 = require("../notifications/notifications.service");
 let UsersService = class UsersService {
-    constructor(userModel, notificationsService) {
+    constructor(userModel, connection, notificationsService) {
         this.userModel = userModel;
+        this.connection = connection;
         this.notificationsService = notificationsService;
     }
     async onModuleInit() {
@@ -51,7 +52,29 @@ let UsersService = class UsersService {
             delete query.$set.email;
             query.$unset = { email: 1 };
         }
-        return this.userModel.findByIdAndUpdate(id, query, { new: true }).select('-password').exec();
+        const updatedUser = await this.userModel.findByIdAndUpdate(id, query, { new: true }).select('-password').exec();
+        if (updatedUser && (updateData.name || updateData.email !== undefined)) {
+            const syncData = {};
+            if (updateData.name)
+                syncData.name = updateData.name;
+            if (updateData.email)
+                syncData.email = updateData.email;
+            const syncQuery = { $set: syncData };
+            if (updateData.email === '') {
+                syncQuery.$unset = { email: 1 };
+            }
+            try {
+                const StudentModel = this.connection.model('Student');
+                await StudentModel.updateMany({ identifier: updatedUser.username }, syncQuery);
+            }
+            catch (e) { }
+            try {
+                const TeacherModel = this.connection.model('Teacher');
+                await TeacherModel.updateMany({ identifier: updatedUser.username }, syncQuery);
+            }
+            catch (e) { }
+        }
+        return updatedUser;
     }
     async delete(id) {
         return this.userModel.findByIdAndDelete(id).exec();
@@ -148,7 +171,9 @@ exports.UsersService = UsersService;
 exports.UsersService = UsersService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, mongoose_1.InjectModel)(user_schema_1.User.name)),
+    __param(1, (0, mongoose_1.InjectConnection)()),
     __metadata("design:paramtypes", [mongoose_2.Model,
+        mongoose_2.Connection,
         notifications_service_1.NotificationsService])
 ], UsersService);
 //# sourceMappingURL=users.service.js.map

@@ -96,7 +96,7 @@ export class UsersController {
   // Endpoints for regular users to manage their own profile
   @Put('me/profile')
   async updateProfile(@Body() updateData: any, @Request() req: any) {
-    const userId = req.user.sub || req.user.id || req.user._id;
+    const userId = req.user.userId || req.user.sub || req.user.id || req.user._id;
     // Evitar que actualicen su rol o su cedula
     delete updateData.roles;
     delete updateData.cedula;
@@ -107,7 +107,7 @@ export class UsersController {
 
   @Put('me/change-password')
   async changePassword(@Body() passData: any, @Request() req: any) {
-    const userId = req.user.sub || req.user.id || req.user._id;
+    const userId = req.user.userId || req.user.sub || req.user.id || req.user._id;
     return this.usersService.changePassword(userId, passData.currentPassword, passData.newPassword);
   }
 

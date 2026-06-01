@@ -55,7 +55,7 @@ let TeachersService = class TeachersService {
         return createdTeacher.save();
     }
     async findAll() {
-        return this.teacherModel.find().exec();
+        return this.teacherModel.find().sort({ name: 1 }).exec();
     }
     async findOne(id) {
         const teacher = await this.teacherModel.findById(id).exec();

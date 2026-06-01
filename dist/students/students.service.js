@@ -66,20 +66,20 @@ let StudentsService = class StudentsService {
         return createdStudent;
     }
     async findAll() {
-        return this.studentModel.find().populate('groupId', 'name').exec();
+        return this.studentModel.find().populate({ path: 'groupId', select: 'name institution nivel', populate: { path: 'institution', select: 'name' } }).sort({ name: 1 }).exec();
     }
     async findOne(id) {
-        const student = await this.studentModel.findById(id).populate('groupId', 'name').exec();
+        const student = await this.studentModel.findById(id).populate({ path: 'groupId', select: 'name institution nivel', populate: { path: 'institution', select: 'name' } }).exec();
         if (!student) {
             throw new common_1.NotFoundException(`Estudiante con ID ${id} no encontrado`);
         }
         return student;
     }
     async findByIdentifier(identifier) {
-        return this.studentModel.findOne({ identifier }).populate('groupId', 'name').exec();
+        return this.studentModel.findOne({ identifier }).populate({ path: 'groupId', select: 'name institution nivel', populate: { path: 'institution', select: 'name' } }).exec();
     }
     async findByIdentifiers(identifiers) {
-        return this.studentModel.find({ identifier: { $in: identifiers } }).populate('groupId', 'name').exec();
+        return this.studentModel.find({ identifier: { $in: identifiers } }).populate({ path: 'groupId', select: 'name institution nivel', populate: { path: 'institution', select: 'name' } }).exec();
     }
     async update(id, updateStudentDto) {
         const student = await this.studentModel.findById(id).exec();

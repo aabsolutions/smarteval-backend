@@ -76,11 +76,11 @@ export class StudentsService {
   }
 
   async findAll(): Promise<Student[]> {
-    return this.studentModel.find().populate('groupId', 'name').exec();
+    return this.studentModel.find().populate({ path: 'groupId', select: 'name institution nivel', populate: { path: 'institution', select: 'name' } }).sort({ name: 1 }).exec();
   }
 
   async findOne(id: string): Promise<Student> {
-    const student = await this.studentModel.findById(id).populate('groupId', 'name').exec();
+    const student = await this.studentModel.findById(id).populate({ path: 'groupId', select: 'name institution nivel', populate: { path: 'institution', select: 'name' } }).exec();
     if (!student) {
       throw new NotFoundException(`Estudiante con ID ${id} no encontrado`);
     }
@@ -88,11 +88,11 @@ export class StudentsService {
   }
 
   async findByIdentifier(identifier: string): Promise<Student> {
-    return this.studentModel.findOne({ identifier }).populate('groupId', 'name').exec();
+    return this.studentModel.findOne({ identifier }).populate({ path: 'groupId', select: 'name institution nivel', populate: { path: 'institution', select: 'name' } }).exec();
   }
 
   async findByIdentifiers(identifiers: string[]): Promise<Student[]> {
-    return this.studentModel.find({ identifier: { $in: identifiers } }).populate('groupId', 'name').exec();
+    return this.studentModel.find({ identifier: { $in: identifiers } }).populate({ path: 'groupId', select: 'name institution nivel', populate: { path: 'institution', select: 'name' } }).exec();
   }
 
 

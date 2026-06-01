@@ -1,11 +1,12 @@
 import { OnModuleInit } from '@nestjs/common';
-import { Model } from 'mongoose';
+import { Model, Connection } from 'mongoose';
 import { User } from './schemas/user.schema';
 import { NotificationsService } from '../notifications/notifications.service';
 export declare class UsersService implements OnModuleInit {
     private readonly userModel;
+    private readonly connection;
     private readonly notificationsService;
-    constructor(userModel: Model<User>, notificationsService: NotificationsService);
+    constructor(userModel: Model<User>, connection: Connection, notificationsService: NotificationsService);
     onModuleInit(): Promise<void>;
     findByUsername(username: string): Promise<User | null>;
     findById(id: string): Promise<User | null>;

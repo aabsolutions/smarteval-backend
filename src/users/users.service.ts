@@ -1,6 +1,6 @@
 import { Injectable, OnModuleInit, NotFoundException, BadRequestException } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { InjectModel, InjectConnection } from '@nestjs/mongoose';
+import { Model, Connection } from 'mongoose';
 import * as bcrypt from 'bcryptjs';
 import { User } from './schemas/user.schema';
 import { NotificationsService } from '../notifications/notifications.service';
@@ -9,6 +9,7 @@ import { NotificationsService } from '../notifications/notifications.service';
 export class UsersService implements OnModuleInit {
   constructor(
     @InjectModel(User.name) private readonly userModel: Model<User>,
+    @InjectConnection() private readonly connection: Connection,
     private readonly notificationsService: NotificationsService,
   ) {}
 
@@ -48,7 +49,30 @@ export class UsersService implements OnModuleInit {
       query.$unset = { email: 1 };
     }
     
-    return this.userModel.findByIdAndUpdate(id, query, { new: true }).select('-password').exec();
+    const updatedUser = await this.userModel.findByIdAndUpdate(id, query, { new: true }).select('-password').exec();
+    
+    if (updatedUser && (updateData.name || updateData.email !== undefined)) {
+      const syncData: any = {};
+      if (updateData.name) syncData.name = updateData.name;
+      if (updateData.email) syncData.email = updateData.email;
+
+      const syncQuery: any = { $set: syncData };
+      if (updateData.email === '') {
+        syncQuery.$unset = { email: 1 };
+      }
+
+      try {
+        const StudentModel = this.connection.model('Student');
+        await StudentModel.updateMany({ identifier: updatedUser.username }, syncQuery);
+      } catch (e) {}
+
+      try {
+        const TeacherModel = this.connection.model('Teacher');
+        await TeacherModel.updateMany({ identifier: updatedUser.username }, syncQuery);
+      } catch (e) {}
+    }
+
+    return updatedUser;
   }
 
   async delete(id: string): Promise<User | null> {
