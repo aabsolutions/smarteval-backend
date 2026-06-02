@@ -296,9 +296,15 @@ let ReportsService = class ReportsService {
                 if (r.outOfTime || r.isTimeout)
                     warningsTxt = 'Cierre forzado/Exceso de tiempo';
                 else if (r.antiCheatLog) {
-                    const sum = (r.antiCheatLog.tabSwitches || 0) + (r.antiCheatLog.fullscreenExits || 0);
-                    if (sum > 0)
-                        warningsTxt = `Infracciones detectadas (${sum})`;
+                    const parts = [];
+                    if (r.antiCheatLog.tabSwitches)
+                        parts.push(`${r.antiCheatLog.tabSwitches} salidas de app`);
+                    if (r.antiCheatLog.fullscreenExits)
+                        parts.push(`${r.antiCheatLog.fullscreenExits} capturas`);
+                    if (r.antiCheatLog.copyPasteAttempts)
+                        parts.push(`${r.antiCheatLog.copyPasteAttempts} intentos de pegado`);
+                    if (parts.length > 0)
+                        warningsTxt = parts.join(', ');
                 }
                 sheet1.addRow({
                     studentName: student.name || 'N/A',
