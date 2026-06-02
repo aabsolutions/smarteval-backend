@@ -11,6 +11,7 @@ export declare class AssessmentsService {
     create(createDto: CreateAssessmentDto, teacherId: string): Promise<Assessment>;
     findAllByTeacher(teacherId: string): Promise<Assessment[]>;
     findAvailableForStudent(studentGroupId: string): Promise<Assessment[]>;
+    findAvailableForStudentUser(username: string): Promise<Assessment[]>;
     findOne(id: string): Promise<Assessment>;
     update(id: string, teacherId: string, updateDto: any): Promise<Assessment>;
     delete(id: string, teacherId: string): Promise<any>;

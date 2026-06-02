@@ -30,14 +30,45 @@ let ReportsService = class ReportsService {
         const assessment = await this.assessmentModel.findOne({ _id: assessmentId, teacherId: new mongoose_2.Types.ObjectId(teacherId) });
         if (!assessment)
             throw new common_1.NotFoundException('Examen no encontrado');
-        const attempts = await this.attemptModel.find({
+        const attemptsRaw = await this.attemptModel.find({
             assessmentId: new mongoose_2.Types.ObjectId(assessmentId),
             status: assessment_attempt_schema_1.AttemptStatus.COMPLETED
         })
             .populate('studentId', 'name username email')
-            .sort({ score: -1 })
+            .sort({ startTime: 1 })
             .lean()
             .exec();
+        const studentAttemptCounter = new Map();
+        const studentBestAttempt = new Map();
+        attemptsRaw.forEach(a => {
+            if (a.studentId) {
+                const sId = a.studentId._id.toString();
+                const count = (studentAttemptCounter.get(sId) || 0) + 1;
+                studentAttemptCounter.set(sId, count);
+                a.attemptNumber = count;
+                const currentBest = studentBestAttempt.get(sId);
+                if (!currentBest || a.score >= currentBest.score) {
+                    studentBestAttempt.set(sId, { id: a._id.toString(), score: a.score });
+                }
+            }
+        });
+        attemptsRaw.forEach(a => {
+            if (a.studentId) {
+                const sId = a.studentId._id.toString();
+                const totalAttempts = studentAttemptCounter.get(sId) || 1;
+                const bestId = studentBestAttempt.get(sId)?.id;
+                a.isHighestScore = (totalAttempts > 1 && a._id.toString() === bestId);
+            }
+        });
+        const attempts = attemptsRaw.sort((a, b) => {
+            const nameA = a.studentId?.name?.toLowerCase() || '';
+            const nameB = b.studentId?.name?.toLowerCase() || '';
+            const nameComparison = nameA.localeCompare(nameB);
+            if (nameComparison !== 0) {
+                return nameComparison;
+            }
+            return (a.attemptNumber || 0) - (b.attemptNumber || 0);
+        });
         const usernames = attempts.map(a => a.studentId && a.studentId.username).filter(Boolean);
         const studentProfiles = await this.studentsService.findByIdentifiers(usernames);
         const profileMap = new Map();
@@ -95,7 +126,9 @@ let ReportsService = class ReportsService {
                 endTime: attempt.endTime,
                 antiCheatLog: attempt.antiCheatLog,
                 isTimeout: attempt.isTimeout,
-                outOfTime: attempt.outOfTime
+                outOfTime: attempt.outOfTime,
+                attemptNumber: attempt.attemptNumber,
+                isHighestScore: attempt.isHighestScore
             };
         });
         const totalRespondieron = formattedAttempts.length;
@@ -194,8 +227,9 @@ let ReportsService = class ReportsService {
                 }
                 else if (q.type === 'fill-blank') {
                     if (sAns.length > 0) {
-                        const userAns = sAns[0].toLowerCase().trim();
-                        isCorrect = q.correctAnswers.some(c => c.toLowerCase().trim() === userAns);
+                        const normalizeStr = (str) => (str || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+                        const userAns = normalizeStr(sAns[0]);
+                        isCorrect = q.correctAnswers.some(c => normalizeStr(c) === userAns);
                     }
                 }
                 if (isCorrect) {
@@ -247,8 +281,10 @@ let ReportsService = class ReportsService {
                 { header: 'Cédula/Código', key: 'identifier', width: 20 },
                 { header: 'Grupo', key: 'group', width: 20 },
                 { header: 'Email', key: 'email', width: 30 },
+                { header: 'Intento', key: 'attemptNumber', width: 15 },
                 { header: 'Puntaje', key: 'score', width: 15 },
                 { header: 'Porcentaje (%)', key: 'percentage', width: 15 },
+                { header: 'Finalizado', key: 'endTime', width: 20 },
                 { header: 'Tiempo (min)', key: 'duration', width: 15 },
                 { header: 'Estado', key: 'status', width: 15 },
                 { header: 'Faltas / AntiTrampas', key: 'warnings', width: 30 }
@@ -269,8 +305,10 @@ let ReportsService = class ReportsService {
                     identifier: student.username || 'N/A',
                     group: student.group || 'N/A',
                     email: student.email || 'N/A',
+                    attemptNumber: `#${r.attemptNumber || 1}${r.isHighestScore ? ' (Mejor)' : ''}`,
                     score: `${r.score} / ${r.maxScore}`,
                     percentage: r.percentage,
+                    endTime: new Date(r.endTime).toLocaleString('es-ES'),
                     duration: r.durationMinutes,
                     status: isApproved ? 'Aprobado' : 'Reprobado',
                     warnings: warningsTxt

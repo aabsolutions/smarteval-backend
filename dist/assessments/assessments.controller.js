@@ -30,14 +30,8 @@ let AssessmentsController = class AssessmentsController {
     findAllByTeacher(req) {
         return this.assessmentsService.findAllByTeacher(req.user.userId);
     }
-    findAvailableForStudent(groupId) {
-        if (groupId) {
-            return this.assessmentsService.findAvailableForStudent(groupId);
-        }
-        return this.assessmentsService['assessmentModel'].find()
-            .populate('topicId', 'name')
-            .populate('teacherId', 'name')
-            .exec();
+    findAvailableForStudent(req) {
+        return this.assessmentsService.findAvailableForStudentUser(req.user.username);
     }
     findOne(id) {
         return this.assessmentsService.findOne(id);
@@ -70,9 +64,9 @@ __decorate([
 __decorate([
     (0, common_1.Get)('student'),
     (0, roles_decorator_1.Roles)('STUDENT'),
-    __param(0, (0, common_1.Query)('groupId')),
+    __param(0, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)
 ], AssessmentsController.prototype, "findAvailableForStudent", null);
 __decorate([

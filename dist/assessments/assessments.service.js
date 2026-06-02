@@ -58,6 +58,17 @@ let AssessmentsService = class AssessmentsService {
             .populate('teacherId', 'name')
             .exec();
     }
+    async findAvailableForStudentUser(username) {
+        const student = await this.studentsService.findByIdentifier(username);
+        if (!student || !student.groupId) {
+            return [];
+        }
+        const groupId = student.groupId._id || student.groupId;
+        return this.assessmentModel.find({ groupIds: new mongoose_2.Types.ObjectId(groupId) })
+            .populate('topicId', 'name')
+            .populate('teacherId', 'name')
+            .exec();
+    }
     async findOne(id) {
         const assessment = await this.assessmentModel.findById(id)
             .populate('topicId', 'name')

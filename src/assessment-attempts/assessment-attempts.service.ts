@@ -163,8 +163,9 @@ export class AssessmentAttemptsService {
         }
       } else if (q.type === 'fill-blank') {
         if (sAns.length > 0) {
-          const userAns = sAns[0].toLowerCase().trim();
-          isCorrect = q.correctAnswers.some(c => c.toLowerCase().trim() === userAns);
+          const normalizeStr = (str: string) => (str || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+          const userAns = normalizeStr(sAns[0]);
+          isCorrect = q.correctAnswers.some(c => normalizeStr(c) === userAns);
         }
       } else if (q.type === 'matching') {
         let correctPairs = 0;

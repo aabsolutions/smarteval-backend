@@ -19,14 +19,51 @@ export class ReportsService {
     const assessment = await this.assessmentModel.findOne({ _id: assessmentId, teacherId: new Types.ObjectId(teacherId) });
     if (!assessment) throw new NotFoundException('Examen no encontrado');
 
-    const attempts = await this.attemptModel.find({
+    const attemptsRaw = await this.attemptModel.find({
       assessmentId: new Types.ObjectId(assessmentId),
       status: AttemptStatus.COMPLETED
     })
     .populate('studentId', 'name username email')
-    .sort({ score: -1 })
+    .sort({ startTime: 1 })
     .lean()
     .exec();
+
+    const studentAttemptCounter = new Map<string, number>();
+    const studentBestAttempt = new Map<string, { id: string, score: number }>();
+
+    attemptsRaw.forEach(a => {
+      if (a.studentId) {
+        const sId = (a.studentId as any)._id.toString();
+        const count = (studentAttemptCounter.get(sId) || 0) + 1;
+        studentAttemptCounter.set(sId, count);
+        (a as any).attemptNumber = count;
+
+        const currentBest = studentBestAttempt.get(sId);
+        if (!currentBest || a.score >= currentBest.score) {
+          // In case of tie, later attempt wins because attemptsRaw is chronologically sorted
+          studentBestAttempt.set(sId, { id: a._id.toString(), score: a.score });
+        }
+      }
+    });
+
+    attemptsRaw.forEach(a => {
+      if (a.studentId) {
+        const sId = (a.studentId as any)._id.toString();
+        const totalAttempts = studentAttemptCounter.get(sId) || 1;
+        const bestId = studentBestAttempt.get(sId)?.id;
+        (a as any).isHighestScore = (totalAttempts > 1 && a._id.toString() === bestId);
+      }
+    });
+
+    const attempts = attemptsRaw.sort((a, b) => {
+      const nameA = (a.studentId as any)?.name?.toLowerCase() || '';
+      const nameB = (b.studentId as any)?.name?.toLowerCase() || '';
+      const nameComparison = nameA.localeCompare(nameB);
+      if (nameComparison !== 0) {
+        return nameComparison;
+      }
+      return ((a as any).attemptNumber || 0) - ((b as any).attemptNumber || 0);
+    });
 
     // Fetch groups for students
     const usernames = attempts.map(a => a.studentId && (a.studentId as any).username).filter(Boolean);
@@ -93,7 +130,9 @@ export class ReportsService {
           endTime: attempt.endTime,
           antiCheatLog: attempt.antiCheatLog,
           isTimeout: attempt.isTimeout,
-          outOfTime: attempt.outOfTime
+          outOfTime: attempt.outOfTime,
+          attemptNumber: (attempt as any).attemptNumber,
+          isHighestScore: (attempt as any).isHighestScore
         };
       });
 
@@ -206,8 +245,9 @@ export class ReportsService {
           }
         } else if (q.type === 'fill-blank') {
           if (sAns.length > 0) {
-            const userAns = sAns[0].toLowerCase().trim();
-            isCorrect = q.correctAnswers.some(c => c.toLowerCase().trim() === userAns);
+            const normalizeStr = (str: string) => (str || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+            const userAns = normalizeStr(sAns[0]);
+            isCorrect = q.correctAnswers.some(c => normalizeStr(c) === userAns);
           }
         }
 
@@ -267,8 +307,10 @@ export class ReportsService {
           { header: 'Cédula/Código', key: 'identifier', width: 20 },
           { header: 'Grupo', key: 'group', width: 20 },
           { header: 'Email', key: 'email', width: 30 },
+          { header: 'Intento', key: 'attemptNumber', width: 15 },
           { header: 'Puntaje', key: 'score', width: 15 },
           { header: 'Porcentaje (%)', key: 'percentage', width: 15 },
+          { header: 'Finalizado', key: 'endTime', width: 20 },
           { header: 'Tiempo (min)', key: 'duration', width: 15 },
           { header: 'Estado', key: 'status', width: 15 },
           { header: 'Faltas / AntiTrampas', key: 'warnings', width: 30 }
@@ -290,8 +332,10 @@ export class ReportsService {
             identifier: student.username || 'N/A',
             group: student.group || 'N/A',
             email: student.email || 'N/A',
+            attemptNumber: `#${r.attemptNumber || 1}${r.isHighestScore ? ' (Mejor)' : ''}`,
             score: `${r.score} / ${r.maxScore}`,
             percentage: r.percentage,
+            endTime: new Date(r.endTime).toLocaleString('es-ES'),
             duration: r.durationMinutes,
             status: isApproved ? 'Aprobado' : 'Reprobado',
             warnings: warningsTxt

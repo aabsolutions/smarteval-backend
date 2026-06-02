@@ -25,15 +25,8 @@ export class AssessmentsController {
 
   @Get('student')
   @Roles('STUDENT')
-  findAvailableForStudent(@Query('groupId') groupId: string) {
-    if (groupId) {
-      return this.assessmentsService.findAvailableForStudent(groupId);
-    }
-    // If no groupId, return all (demo fallback)
-    return this.assessmentsService['assessmentModel'].find()
-      .populate('topicId', 'name')
-      .populate('teacherId', 'name')
-      .exec();
+  findAvailableForStudent(@Request() req) {
+    return this.assessmentsService.findAvailableForStudentUser(req.user.username);
   }
 
   @Get(':id')

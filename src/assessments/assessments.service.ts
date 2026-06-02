@@ -59,6 +59,19 @@ export class AssessmentsService {
       .exec();
   }
 
+  async findAvailableForStudentUser(username: string): Promise<Assessment[]> {
+    const student = await this.studentsService.findByIdentifier(username);
+    if (!student || !student.groupId) {
+      return [];
+    }
+    const groupId = (student.groupId as any)._id || student.groupId;
+    
+    return this.assessmentModel.find({ groupIds: new Types.ObjectId(groupId) })
+      .populate('topicId', 'name')
+      .populate('teacherId', 'name')
+      .exec();
+  }
+
   async findOne(id: string): Promise<Assessment> {
     const assessment = await this.assessmentModel.findById(id)
       .populate('topicId', 'name')
