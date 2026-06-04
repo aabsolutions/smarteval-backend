@@ -1,0 +1,19 @@
+{
+  "_id": "6a1e507e059d982cb120fdc6",
+  "username": "0957743628",
+  "password": "$2a$10$fuPzSM2wkZ.okVpcdMYwoOl17CDps7u1rzqclTH.8vp/9J.OVUuEi",
+  "name": "PISCO CONTRERAS JHON CARLOS",
+  "roles": [
+    {
+      "name": "STUDENT",
+      "priority": 3
+    }
+  ],
+  "permissions": [
+    "canRead"
+  ],
+  "avatar": "student.jpg",
+  "createdAt": "2026-06-02T03:39:42.954Z",
+  "updatedAt": "2026-06-02T03:39:42.954Z",
+  "__v": 0
+}

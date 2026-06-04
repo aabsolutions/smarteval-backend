@@ -1,0 +1,23 @@
+[
+  {
+    "_id": "6a210a7af80138b3a0ab5f83",
+    "studentId": "6a1e507e059d982cb120fdc6",
+    "teacherId": "6a1bb8b48dc614e23a14cbff",
+    "assessmentId": "6a204310028a450aaebdbb88",
+    "reason": "No pude asistir por problemas personales, adjunto solicitud firmada por mi representante y su cédula",
+    "imageUrls": [
+      "https://res.cloudinary.com/dssn4pggr/image/upload/v1780550264/smarteval/requests/rtuhiuu9uf1rar65ueon.jpg",
+      "https://res.cloudinary.com/dssn4pggr/image/upload/v1780550265/smarteval/requests/jgdgvdsdywopsmlfwbit.jpg"
+    ],
+    "imagePublicIds": [
+      "smarteval/requests/rtuhiuu9uf1rar65ueon",
+      "smarteval/requests/jgdgvdsdywopsmlfwbit"
+    ],
+    "status": "APROBADA",
+    "createdAt": "2026-06-04T05:17:46.298Z",
+    "updatedAt": "2026-06-04T12:17:03.613Z",
+    "__v": 0,
+    "teacherComment": "kk",
+    "extensionUntil": "2026-06-05T20:00:00.000Z"
+  }
+]

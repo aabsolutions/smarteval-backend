@@ -62,7 +62,7 @@ let AssessmentsService = class AssessmentsService {
             .lean()
             .exec();
     }
-    async findAvailableForStudentUser(username) {
+    async findAvailableForStudentUser(username, userId) {
         const student = await this.studentsService.findByIdentifier(username);
         if (!student || !student.groupId) {
             return [];
@@ -74,11 +74,15 @@ let AssessmentsService = class AssessmentsService {
             .lean()
             .exec();
         const lateRequests = await this.lateRequestModel.find({
-            studentId: new mongoose_2.Types.ObjectId(student._id),
+            studentId: new mongoose_2.Types.ObjectId(userId),
             status: late_request_schema_1.LateRequestStatus.APROBADA
         }).lean().exec();
+        console.log(`Found ${lateRequests.length} approved late requests for student ${student._id}`);
         return assessments.map(a => {
             const extension = lateRequests.find(lr => lr.assessmentId.toString() === a._id.toString());
+            if (extension) {
+                console.log(`Matching extension found for assessment ${a._id}. extensionUntil:`, extension.extensionUntil);
+            }
             if (extension && extension.extensionUntil) {
                 return { ...a, extensionUntil: extension.extensionUntil };
             }
