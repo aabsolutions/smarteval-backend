@@ -25,7 +25,12 @@ let LateRequestsController = class LateRequestsController {
         this.lateRequestsService = lateRequestsService;
     }
     async createRequest(req, teacherId, assessmentId, reason, files) {
-        return this.lateRequestsService.createRequest(req.user.userId, teacherId, assessmentId, reason, files);
+        try {
+            return await this.lateRequestsService.createRequest(req.user.userId, teacherId, assessmentId, reason, files);
+        }
+        catch (e) {
+            throw new common_1.BadRequestException(e.message || 'Unknown error during createRequest');
+        }
     }
     async updateRequest(req, id, reason, files) {
         return this.lateRequestsService.updateRequest(id, req.user.userId, reason, files);
