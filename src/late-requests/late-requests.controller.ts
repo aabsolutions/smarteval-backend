@@ -21,7 +21,11 @@ export class LateRequestsController {
     @Body('reason') reason: string,
     @UploadedFiles() files: Express.Multer.File[]
   ) {
-    return this.lateRequestsService.createRequest(req.user.userId, teacherId, assessmentId, reason, files);
+    try {
+      return await this.lateRequestsService.createRequest(req.user.userId, teacherId, assessmentId, reason, files);
+    } catch (e) {
+      throw new BadRequestException(e.message || 'Unknown error during createRequest');
+    }
   }
 
   @Patch(':id/update')
