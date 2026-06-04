@@ -63,7 +63,7 @@ export class AssessmentsService {
       .exec();
   }
 
-  async findAvailableForStudentUser(username: string): Promise<any[]> {
+  async findAvailableForStudentUser(username: string, userId: string): Promise<any[]> {
     const student = await this.studentsService.findByIdentifier(username);
     if (!student || !student.groupId) {
       return [];
@@ -78,12 +78,16 @@ export class AssessmentsService {
 
     // Check for approved late requests for this student
     const lateRequests = await this.lateRequestModel.find({
-      studentId: new Types.ObjectId(student._id),
+      studentId: new Types.ObjectId(userId),
       status: LateRequestStatus.APROBADA
     }).lean().exec();
+    console.log(`Found ${lateRequests.length} approved late requests for student ${student._id}`);
 
     return assessments.map(a => {
       const extension = lateRequests.find(lr => lr.assessmentId.toString() === a._id.toString());
+      if (extension) {
+        console.log(`Matching extension found for assessment ${a._id}. extensionUntil:`, extension.extensionUntil);
+      }
       if (extension && extension.extensionUntil) {
         return { ...a, extensionUntil: extension.extensionUntil };
       }

@@ -13,7 +13,7 @@ export declare class AssessmentsService {
     create(createDto: CreateAssessmentDto, teacherId: string): Promise<Assessment>;
     findAllByTeacher(teacherId: string): Promise<any[]>;
     findAvailableForStudent(studentGroupId: string): Promise<any[]>;
-    findAvailableForStudentUser(username: string): Promise<any[]>;
+    findAvailableForStudentUser(username: string, userId: string): Promise<any[]>;
     findOne(id: string): Promise<any>;
     update(id: string, teacherId: string, updateDto: any): Promise<Assessment>;
     allowLateStudent(assessmentId: string, studentId: string): Promise<void>;

@@ -26,7 +26,22 @@ export class AssessmentsController {
   @Get('student')
   @Roles('STUDENT')
   findAvailableForStudent(@Request() req) {
-    return this.assessmentsService.findAvailableForStudentUser(req.user.username);
+    return this.assessmentsService.findAvailableForStudentUser(req.user.username, req.user.userId || req.user.sub);
+  }
+
+  @Get('debug-student')
+  @Roles('STUDENT')
+  async debugStudent(@Request() req) {
+    const data = await this.assessmentsService.findAvailableForStudentUser(req.user.username, req.user.userId || req.user.sub);
+    return {
+      now: new Date().toISOString(),
+      assessments: data.map(a => ({
+        _id: a._id,
+        title: a.title,
+        endTime: a.endTime,
+        extensionUntil: a.extensionUntil
+      }))
+    };
   }
 
   @Get(':id')
