@@ -6,11 +6,13 @@ import { CreateAssessmentDto } from './dto/create-assessment.dto';
 
 import { NotificationsService } from '../notifications/notifications.service';
 import { StudentsService } from '../students/students.service';
+import { LateRequest, LateRequestDocument, LateRequestStatus } from '../late-requests/late-request.schema';
 
 @Injectable()
 export class AssessmentsService {
   constructor(
     @InjectModel(Assessment.name) private assessmentModel: Model<AssessmentDocument>,
+    @InjectModel(LateRequest.name) private lateRequestModel: Model<LateRequestDocument>,
     private notificationsService: NotificationsService,
     private studentsService: StudentsService
   ) {}
@@ -45,37 +47,55 @@ export class AssessmentsService {
     return created;
   }
 
-  async findAllByTeacher(teacherId: string): Promise<Assessment[]> {
+  async findAllByTeacher(teacherId: string): Promise<any[]> {
     return this.assessmentModel.find({ teacherId: new Types.ObjectId(teacherId) })
       .populate('topicId', 'name')
       .populate('groupIds', 'name')
+      .lean()
       .exec();
   }
 
-  async findAvailableForStudent(studentGroupId: string): Promise<Assessment[]> {
+  async findAvailableForStudent(studentGroupId: string): Promise<any[]> {
     return this.assessmentModel.find({ groupIds: new Types.ObjectId(studentGroupId) })
       .populate('topicId', 'name')
       .populate('teacherId', 'name')
+      .lean()
       .exec();
   }
 
-  async findAvailableForStudentUser(username: string): Promise<Assessment[]> {
+  async findAvailableForStudentUser(username: string): Promise<any[]> {
     const student = await this.studentsService.findByIdentifier(username);
     if (!student || !student.groupId) {
       return [];
     }
     const groupId = (student.groupId as any)._id || student.groupId;
     
-    return this.assessmentModel.find({ groupIds: new Types.ObjectId(groupId) })
+    const assessments = await this.assessmentModel.find({ groupIds: new Types.ObjectId(groupId) })
       .populate('topicId', 'name')
       .populate('teacherId', 'name')
+      .lean()
       .exec();
+
+    // Check for approved late requests for this student
+    const lateRequests = await this.lateRequestModel.find({
+      studentId: new Types.ObjectId(student._id),
+      status: LateRequestStatus.APROBADA
+    }).lean().exec();
+
+    return assessments.map(a => {
+      const extension = lateRequests.find(lr => lr.assessmentId.toString() === a._id.toString());
+      if (extension && extension.extensionUntil) {
+        return { ...a, extensionUntil: extension.extensionUntil };
+      }
+      return a;
+    });
   }
 
-  async findOne(id: string): Promise<Assessment> {
+  async findOne(id: string): Promise<any> {
     const assessment = await this.assessmentModel.findById(id)
       .populate('topicId', 'name')
       .populate('groupIds', 'name')
+      .lean()
       .exec();
     if (!assessment) throw new NotFoundException('Assessment not found');
     return assessment;
@@ -108,6 +128,18 @@ export class AssessmentsService {
     }
 
     return updated;
+  }
+
+  async allowLateStudent(assessmentId: string, studentId: string): Promise<void> {
+    await this.assessmentModel.findByIdAndUpdate(assessmentId, {
+      $addToSet: { allowedLateStudents: new Types.ObjectId(studentId) }
+    });
+  }
+
+  async removeLateStudent(assessmentId: string, studentId: string): Promise<void> {
+    await this.assessmentModel.findByIdAndUpdate(assessmentId, {
+      $pull: { allowedLateStudents: new Types.ObjectId(studentId) }
+    });
   }
 
   async delete(id: string, teacherId: string): Promise<any> {

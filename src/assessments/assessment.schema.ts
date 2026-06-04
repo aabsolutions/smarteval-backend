@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, Types } from 'mongoose';
+import { Document, Types, Schema as MongooseSchema } from 'mongoose';
 
 export type AssessmentDocument = Assessment & Document;
 
@@ -11,13 +11,13 @@ export class Assessment {
   @Prop()
   description: string;
 
-  @Prop({ type: Types.ObjectId, ref: 'Topic', required: true })
+  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'Topic', required: true })
   topicId: Types.ObjectId;
 
-  @Prop({ type: Types.ObjectId, ref: 'User', required: true })
+  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: true })
   teacherId: Types.ObjectId;
 
-  @Prop({ type: [{ type: Types.ObjectId, ref: 'Group' }], required: true })
+  @Prop({ type: [{ type: MongooseSchema.Types.ObjectId, ref: 'Group' }], required: true })
   groupIds: Types.ObjectId[];
 
   @Prop({ required: true })
@@ -46,6 +46,9 @@ export class Assessment {
 
   @Prop({ default: false })
   isSimulator: boolean;
+
+  @Prop({ type: [{ type: MongooseSchema.Types.ObjectId, ref: 'User' }], default: [] })
+  allowedLateStudents: Types.ObjectId[];
 }
 
 export const AssessmentSchema = SchemaFactory.createForClass(Assessment);

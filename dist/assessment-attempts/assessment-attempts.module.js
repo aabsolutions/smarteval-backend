@@ -14,6 +14,7 @@ const assessment_attempts_service_1 = require("./assessment-attempts.service");
 const assessment_attempt_schema_1 = require("./assessment-attempt.schema");
 const assessment_schema_1 = require("../assessments/assessment.schema");
 const question_schema_1 = require("../questions/question.schema");
+const late_request_schema_1 = require("../late-requests/late-request.schema");
 let AssessmentAttemptsModule = class AssessmentAttemptsModule {
 };
 exports.AssessmentAttemptsModule = AssessmentAttemptsModule;
@@ -23,7 +24,8 @@ exports.AssessmentAttemptsModule = AssessmentAttemptsModule = __decorate([
             mongoose_1.MongooseModule.forFeature([
                 { name: assessment_attempt_schema_1.AssessmentAttempt.name, schema: assessment_attempt_schema_1.AssessmentAttemptSchema },
                 { name: assessment_schema_1.Assessment.name, schema: assessment_schema_1.AssessmentSchema },
-                { name: question_schema_1.Question.name, schema: question_schema_1.QuestionSchema }
+                { name: question_schema_1.Question.name, schema: question_schema_1.QuestionSchema },
+                { name: late_request_schema_1.LateRequest.name, schema: late_request_schema_1.LateRequestSchema }
             ])
         ],
         controllers: [assessment_attempts_controller_1.AssessmentAttemptsController],

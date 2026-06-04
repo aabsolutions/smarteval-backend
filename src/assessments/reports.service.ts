@@ -21,7 +21,8 @@ export class ReportsService {
 
     const attemptsRaw = await this.attemptModel.find({
       assessmentId: new Types.ObjectId(assessmentId),
-      status: AttemptStatus.COMPLETED
+      status: AttemptStatus.COMPLETED,
+      isArchived: { $ne: true }
     })
     .populate('studentId', 'name username email')
     .sort({ startTime: 1 })
@@ -204,7 +205,8 @@ export class ReportsService {
 
     const attempts = await this.attemptModel.find({
       assessmentId: new Types.ObjectId(assessmentId),
-      status: AttemptStatus.COMPLETED
+      status: AttemptStatus.COMPLETED,
+      isArchived: { $ne: true }
     })
     .populate('studentId', '_id') // Para poder identificar si el usuario fue eliminado
     .exec();

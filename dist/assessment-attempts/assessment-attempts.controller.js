@@ -34,6 +34,12 @@ let AssessmentAttemptsController = class AssessmentAttemptsController {
     getAttemptDetails(attemptId, req) {
         return this.attemptsService.getAttemptDetails(attemptId, req.user.userId || req.user.sub);
     }
+    archiveAttempt(id) {
+        return this.attemptsService.archiveAttempt(id);
+    }
+    getArchivedAttempts(assessmentId) {
+        return this.attemptsService.getArchivedAttempts(assessmentId);
+    }
 };
 exports.AssessmentAttemptsController = AssessmentAttemptsController;
 __decorate([
@@ -75,6 +81,22 @@ __decorate([
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", void 0)
 ], AssessmentAttemptsController.prototype, "getAttemptDetails", null);
+__decorate([
+    (0, common_1.Patch)(':id/archive'),
+    (0, roles_decorator_1.Roles)('TEACHER', 'ADMIN'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], AssessmentAttemptsController.prototype, "archiveAttempt", null);
+__decorate([
+    (0, common_1.Get)(':assessmentId/archived'),
+    (0, roles_decorator_1.Roles)('TEACHER', 'ADMIN'),
+    __param(0, (0, common_1.Param)('assessmentId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], AssessmentAttemptsController.prototype, "getArchivedAttempts", null);
 exports.AssessmentAttemptsController = AssessmentAttemptsController = __decorate([
     (0, common_1.Controller)('assessment-attempts'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),

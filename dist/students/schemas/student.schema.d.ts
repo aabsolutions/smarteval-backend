@@ -3,7 +3,6 @@ export declare class Student extends Document {
     name: string;
     identifier: string;
     email: string;
-    password?: string;
     groupId: MongooseSchema.Types.ObjectId;
 }
 export declare const StudentSchema: MongooseSchema<Student, import("mongoose").Model<Student, any, any, any, Document<unknown, any, Student, any, {}> & Student & Required<{

@@ -83,6 +83,9 @@ export class AssessmentAttempt {
 
   @Prop({ default: false })
   outOfTime: boolean;
+
+  @Prop({ default: false })
+  isArchived: boolean;
 }
 
 export const AssessmentAttemptSchema = SchemaFactory.createForClass(AssessmentAttempt);

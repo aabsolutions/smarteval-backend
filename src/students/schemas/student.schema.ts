@@ -12,9 +12,6 @@ export class Student extends Document {
   @Prop({ unique: true, index: true, sparse: true })
   email: string;
 
-  @Prop()
-  password?: string;
-
   @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'Group', required: true })
   groupId: MongooseSchema.Types.ObjectId;
 }

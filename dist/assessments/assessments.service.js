@@ -19,9 +19,11 @@ const mongoose_2 = require("mongoose");
 const assessment_schema_1 = require("./assessment.schema");
 const notifications_service_1 = require("../notifications/notifications.service");
 const students_service_1 = require("../students/students.service");
+const late_request_schema_1 = require("../late-requests/late-request.schema");
 let AssessmentsService = class AssessmentsService {
-    constructor(assessmentModel, notificationsService, studentsService) {
+    constructor(assessmentModel, lateRequestModel, notificationsService, studentsService) {
         this.assessmentModel = assessmentModel;
+        this.lateRequestModel = lateRequestModel;
         this.notificationsService = notificationsService;
         this.studentsService = studentsService;
     }
@@ -50,12 +52,14 @@ let AssessmentsService = class AssessmentsService {
         return this.assessmentModel.find({ teacherId: new mongoose_2.Types.ObjectId(teacherId) })
             .populate('topicId', 'name')
             .populate('groupIds', 'name')
+            .lean()
             .exec();
     }
     async findAvailableForStudent(studentGroupId) {
         return this.assessmentModel.find({ groupIds: new mongoose_2.Types.ObjectId(studentGroupId) })
             .populate('topicId', 'name')
             .populate('teacherId', 'name')
+            .lean()
             .exec();
     }
     async findAvailableForStudentUser(username) {
@@ -64,15 +68,28 @@ let AssessmentsService = class AssessmentsService {
             return [];
         }
         const groupId = student.groupId._id || student.groupId;
-        return this.assessmentModel.find({ groupIds: new mongoose_2.Types.ObjectId(groupId) })
+        const assessments = await this.assessmentModel.find({ groupIds: new mongoose_2.Types.ObjectId(groupId) })
             .populate('topicId', 'name')
             .populate('teacherId', 'name')
+            .lean()
             .exec();
+        const lateRequests = await this.lateRequestModel.find({
+            studentId: new mongoose_2.Types.ObjectId(student._id),
+            status: late_request_schema_1.LateRequestStatus.APROBADA
+        }).lean().exec();
+        return assessments.map(a => {
+            const extension = lateRequests.find(lr => lr.assessmentId.toString() === a._id.toString());
+            if (extension && extension.extensionUntil) {
+                return { ...a, extensionUntil: extension.extensionUntil };
+            }
+            return a;
+        });
     }
     async findOne(id) {
         const assessment = await this.assessmentModel.findById(id)
             .populate('topicId', 'name')
             .populate('groupIds', 'name')
+            .lean()
             .exec();
         if (!assessment)
             throw new common_1.NotFoundException('Assessment not found');
@@ -95,6 +112,16 @@ let AssessmentsService = class AssessmentsService {
         }
         return updated;
     }
+    async allowLateStudent(assessmentId, studentId) {
+        await this.assessmentModel.findByIdAndUpdate(assessmentId, {
+            $addToSet: { allowedLateStudents: new mongoose_2.Types.ObjectId(studentId) }
+        });
+    }
+    async removeLateStudent(assessmentId, studentId) {
+        await this.assessmentModel.findByIdAndUpdate(assessmentId, {
+            $pull: { allowedLateStudents: new mongoose_2.Types.ObjectId(studentId) }
+        });
+    }
     async delete(id, teacherId) {
         const deleted = await this.assessmentModel.findOneAndDelete({ _id: id, teacherId: new mongoose_2.Types.ObjectId(teacherId) });
         if (!deleted)
@@ -106,7 +133,9 @@ exports.AssessmentsService = AssessmentsService;
 exports.AssessmentsService = AssessmentsService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, mongoose_1.InjectModel)(assessment_schema_1.Assessment.name)),
+    __param(1, (0, mongoose_1.InjectModel)(late_request_schema_1.LateRequest.name)),
     __metadata("design:paramtypes", [mongoose_2.Model,
+        mongoose_2.Model,
         notifications_service_1.NotificationsService,
         students_service_1.StudentsService])
 ], AssessmentsService);

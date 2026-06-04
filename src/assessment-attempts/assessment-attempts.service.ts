@@ -4,6 +4,7 @@ import { Model, Types } from 'mongoose';
 import { AssessmentAttempt, AssessmentAttemptDocument, AttemptStatus } from './assessment-attempt.schema';
 import { Assessment, AssessmentDocument } from '../assessments/assessment.schema';
 import { Question, QuestionDocument } from '../questions/question.schema';
+import { LateRequest, LateRequestDocument, LateRequestStatus } from '../late-requests/late-request.schema';
 
 @Injectable()
 export class AssessmentAttemptsService {
@@ -11,6 +12,7 @@ export class AssessmentAttemptsService {
     @InjectModel(AssessmentAttempt.name) private attemptModel: Model<AssessmentAttemptDocument>,
     @InjectModel(Assessment.name) private assessmentModel: Model<AssessmentDocument>,
     @InjectModel(Question.name) private questionModel: Model<QuestionDocument>,
+    @InjectModel(LateRequest.name) private lateRequestModel: Model<LateRequestDocument>,
   ) {}
 
   private sanitizeAttempt(attempt: any): any {
@@ -33,8 +35,20 @@ export class AssessmentAttemptsService {
     if (now < assessment.startTime) {
       throw new BadRequestException('El examen aún no ha comenzado, revisa la fecha y hora de inicio.');
     }
-    if (now > assessment.endTime) {
+    const approvedRequest = await this.lateRequestModel.findOne({
+      assessmentId: new Types.ObjectId(assessmentId),
+      studentId: new Types.ObjectId(studentId),
+      status: LateRequestStatus.APROBADA
+    });
+
+    const isLateStudent = !!approvedRequest;
+    
+    if (!isLateStudent && now > assessment.endTime) {
       throw new BadRequestException('El plazo para rendir este examen ya ha finalizado.');
+    }
+    
+    if (isLateStudent && approvedRequest.extensionUntil && now > approvedRequest.extensionUntil) {
+      throw new BadRequestException('El plazo de tu extensión para rendir este examen ha expirado.');
     }
 
     const inProgress = await this.attemptModel.findOne({
@@ -49,7 +63,8 @@ export class AssessmentAttemptsService {
 
     const previousAttempts = await this.attemptModel.countDocuments({
       assessmentId: new Types.ObjectId(assessmentId),
-      studentId: new Types.ObjectId(studentId)
+      studentId: new Types.ObjectId(studentId),
+      isArchived: { $ne: true }
     });
 
     if (previousAttempts >= assessment.maxAttempts) {
@@ -204,7 +219,8 @@ export class AssessmentAttemptsService {
   async getAttemptStatus(assessmentId: string, studentId: string): Promise<any> {
     const attempts = await this.attemptModel.find({
       assessmentId: new Types.ObjectId(assessmentId),
-      studentId: new Types.ObjectId(studentId)
+      studentId: new Types.ObjectId(studentId),
+      isArchived: { $ne: true }
     }).sort({ createdAt: -1 }).exec();
 
     return {
@@ -216,7 +232,8 @@ export class AssessmentAttemptsService {
   async getAttemptsByAssessment(assessmentId: string, studentId: string): Promise<AssessmentAttempt[]> {
     return this.attemptModel.find({ 
       assessmentId: new Types.ObjectId(assessmentId),
-      studentId: new Types.ObjectId(studentId)
+      studentId: new Types.ObjectId(studentId),
+      isArchived: { $ne: true }
     }).sort({ createdAt: -1 }).exec();
   }
 
@@ -228,5 +245,20 @@ export class AssessmentAttemptsService {
     const attempt = await this.attemptModel.findOne({ _id: attemptId, studentId: new Types.ObjectId(studentId) });
     if (!attempt) throw new NotFoundException('Attempt not found');
     return this.sanitizeAttempt(attempt);
+  }
+
+  async archiveAttempt(attemptId: string): Promise<AssessmentAttempt> {
+    const attempt = await this.attemptModel.findById(attemptId);
+    if (!attempt) throw new NotFoundException('Attempt not found');
+    
+    attempt.isArchived = true;
+    return attempt.save();
+  }
+
+  async getArchivedAttempts(assessmentId: string): Promise<AssessmentAttempt[]> {
+    return this.attemptModel.find({ 
+      assessmentId: new Types.ObjectId(assessmentId),
+      isArchived: true
+    }).populate('studentId', 'name username email group').sort({ createdAt: -1 }).exec();
   }
 }

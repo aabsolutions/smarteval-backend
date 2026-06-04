@@ -19,11 +19,13 @@ const mongoose_2 = require("mongoose");
 const assessment_attempt_schema_1 = require("./assessment-attempt.schema");
 const assessment_schema_1 = require("../assessments/assessment.schema");
 const question_schema_1 = require("../questions/question.schema");
+const late_request_schema_1 = require("../late-requests/late-request.schema");
 let AssessmentAttemptsService = class AssessmentAttemptsService {
-    constructor(attemptModel, assessmentModel, questionModel) {
+    constructor(attemptModel, assessmentModel, questionModel, lateRequestModel) {
         this.attemptModel = attemptModel;
         this.assessmentModel = assessmentModel;
         this.questionModel = questionModel;
+        this.lateRequestModel = lateRequestModel;
     }
     sanitizeAttempt(attempt) {
         const attemptObj = attempt.toObject ? attempt.toObject() : attempt;
@@ -44,8 +46,17 @@ let AssessmentAttemptsService = class AssessmentAttemptsService {
         if (now < assessment.startTime) {
             throw new common_1.BadRequestException('El examen aún no ha comenzado, revisa la fecha y hora de inicio.');
         }
-        if (now > assessment.endTime) {
+        const approvedRequest = await this.lateRequestModel.findOne({
+            assessmentId: new mongoose_2.Types.ObjectId(assessmentId),
+            studentId: new mongoose_2.Types.ObjectId(studentId),
+            status: late_request_schema_1.LateRequestStatus.APROBADA
+        });
+        const isLateStudent = !!approvedRequest;
+        if (!isLateStudent && now > assessment.endTime) {
             throw new common_1.BadRequestException('El plazo para rendir este examen ya ha finalizado.');
+        }
+        if (isLateStudent && approvedRequest.extensionUntil && now > approvedRequest.extensionUntil) {
+            throw new common_1.BadRequestException('El plazo de tu extensión para rendir este examen ha expirado.');
         }
         const inProgress = await this.attemptModel.findOne({
             assessmentId: new mongoose_2.Types.ObjectId(assessmentId),
@@ -57,7 +68,8 @@ let AssessmentAttemptsService = class AssessmentAttemptsService {
         }
         const previousAttempts = await this.attemptModel.countDocuments({
             assessmentId: new mongoose_2.Types.ObjectId(assessmentId),
-            studentId: new mongoose_2.Types.ObjectId(studentId)
+            studentId: new mongoose_2.Types.ObjectId(studentId),
+            isArchived: { $ne: true }
         });
         if (previousAttempts >= assessment.maxAttempts) {
             throw new common_1.BadRequestException(`Ya has alcanzado el máximo de intentos (${assessment.maxAttempts})`);
@@ -187,7 +199,8 @@ let AssessmentAttemptsService = class AssessmentAttemptsService {
     async getAttemptStatus(assessmentId, studentId) {
         const attempts = await this.attemptModel.find({
             assessmentId: new mongoose_2.Types.ObjectId(assessmentId),
-            studentId: new mongoose_2.Types.ObjectId(studentId)
+            studentId: new mongoose_2.Types.ObjectId(studentId),
+            isArchived: { $ne: true }
         }).sort({ createdAt: -1 }).exec();
         return {
             attemptsCount: attempts.length,
@@ -197,7 +210,8 @@ let AssessmentAttemptsService = class AssessmentAttemptsService {
     async getAttemptsByAssessment(assessmentId, studentId) {
         return this.attemptModel.find({
             assessmentId: new mongoose_2.Types.ObjectId(assessmentId),
-            studentId: new mongoose_2.Types.ObjectId(studentId)
+            studentId: new mongoose_2.Types.ObjectId(studentId),
+            isArchived: { $ne: true }
         }).sort({ createdAt: -1 }).exec();
     }
     async removeAllForStudent(studentId) {
@@ -209,6 +223,19 @@ let AssessmentAttemptsService = class AssessmentAttemptsService {
             throw new common_1.NotFoundException('Attempt not found');
         return this.sanitizeAttempt(attempt);
     }
+    async archiveAttempt(attemptId) {
+        const attempt = await this.attemptModel.findById(attemptId);
+        if (!attempt)
+            throw new common_1.NotFoundException('Attempt not found');
+        attempt.isArchived = true;
+        return attempt.save();
+    }
+    async getArchivedAttempts(assessmentId) {
+        return this.attemptModel.find({
+            assessmentId: new mongoose_2.Types.ObjectId(assessmentId),
+            isArchived: true
+        }).populate('studentId', 'name username email group').sort({ createdAt: -1 }).exec();
+    }
 };
 exports.AssessmentAttemptsService = AssessmentAttemptsService;
 exports.AssessmentAttemptsService = AssessmentAttemptsService = __decorate([
@@ -216,7 +243,9 @@ exports.AssessmentAttemptsService = AssessmentAttemptsService = __decorate([
     __param(0, (0, mongoose_1.InjectModel)(assessment_attempt_schema_1.AssessmentAttempt.name)),
     __param(1, (0, mongoose_1.InjectModel)(assessment_schema_1.Assessment.name)),
     __param(2, (0, mongoose_1.InjectModel)(question_schema_1.Question.name)),
+    __param(3, (0, mongoose_1.InjectModel)(late_request_schema_1.LateRequest.name)),
     __metadata("design:paramtypes", [mongoose_2.Model,
+        mongoose_2.Model,
         mongoose_2.Model,
         mongoose_2.Model])
 ], AssessmentAttemptsService);

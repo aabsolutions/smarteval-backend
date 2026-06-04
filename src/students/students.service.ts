@@ -62,8 +62,8 @@ export class StudentsService {
     const newUser = await this.usersService.create(userData);
 
     // Prevent saving plain text password in the student collection
-    delete createStudentDto.password;
-    const createdStudent = new this.studentModel(createStudentDto);
+    const { password, ...studentData } = createStudentDto;
+    const createdStudent = new this.studentModel(studentData);
     await createdStudent.save();
 
     // Enviar notificación in-app de bienvenida

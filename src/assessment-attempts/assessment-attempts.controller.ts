@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Body, Param, UseGuards, Request } from '@nestjs/common';
 import { AssessmentAttemptsService } from './assessment-attempts.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -43,5 +43,17 @@ export class AssessmentAttemptsController {
   @Roles('STUDENT')
   getAttemptDetails(@Param('attemptId') attemptId: string, @Request() req) {
     return this.attemptsService.getAttemptDetails(attemptId, req.user.userId || req.user.sub);
+  }
+
+  @Patch(':id/archive')
+  @Roles('TEACHER', 'ADMIN')
+  archiveAttempt(@Param('id') id: string) {
+    return this.attemptsService.archiveAttempt(id);
+  }
+
+  @Get(':assessmentId/archived')
+  @Roles('TEACHER', 'ADMIN')
+  getArchivedAttempts(@Param('assessmentId') assessmentId: string) {
+    return this.attemptsService.getArchivedAttempts(assessmentId);
   }
 }

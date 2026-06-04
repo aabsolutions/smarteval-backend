@@ -24,15 +24,15 @@ __decorate([
     __metadata("design:type", String)
 ], Assessment.prototype, "description", void 0);
 __decorate([
-    (0, mongoose_1.Prop)({ type: mongoose_2.Types.ObjectId, ref: 'Topic', required: true }),
+    (0, mongoose_1.Prop)({ type: mongoose_2.Schema.Types.ObjectId, ref: 'Topic', required: true }),
     __metadata("design:type", mongoose_2.Types.ObjectId)
 ], Assessment.prototype, "topicId", void 0);
 __decorate([
-    (0, mongoose_1.Prop)({ type: mongoose_2.Types.ObjectId, ref: 'User', required: true }),
+    (0, mongoose_1.Prop)({ type: mongoose_2.Schema.Types.ObjectId, ref: 'User', required: true }),
     __metadata("design:type", mongoose_2.Types.ObjectId)
 ], Assessment.prototype, "teacherId", void 0);
 __decorate([
-    (0, mongoose_1.Prop)({ type: [{ type: mongoose_2.Types.ObjectId, ref: 'Group' }], required: true }),
+    (0, mongoose_1.Prop)({ type: [{ type: mongoose_2.Schema.Types.ObjectId, ref: 'Group' }], required: true }),
     __metadata("design:type", Array)
 ], Assessment.prototype, "groupIds", void 0);
 __decorate([
@@ -71,6 +71,10 @@ __decorate([
     (0, mongoose_1.Prop)({ default: false }),
     __metadata("design:type", Boolean)
 ], Assessment.prototype, "isSimulator", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: [{ type: mongoose_2.Schema.Types.ObjectId, ref: 'User' }], default: [] }),
+    __metadata("design:type", Array)
+], Assessment.prototype, "allowedLateStudents", void 0);
 exports.Assessment = Assessment = __decorate([
     (0, mongoose_1.Schema)({ timestamps: true })
 ], Assessment);

@@ -51,8 +51,8 @@ let TeachersService = class TeachersService {
             userData.email = createTeacherDto.email;
         }
         await this.usersService.create(userData);
-        delete createTeacherDto.password;
-        const createdTeacher = new this.teacherModel(createTeacherDto);
+        const { password, ...teacherData } = createTeacherDto;
+        const createdTeacher = new this.teacherModel(teacherData);
         return createdTeacher.save();
     }
     async findAll() {

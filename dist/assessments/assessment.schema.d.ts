@@ -1,4 +1,4 @@
-import { Document, Types } from 'mongoose';
+import { Document, Types, Schema as MongooseSchema } from 'mongoose';
 export type AssessmentDocument = Assessment & Document;
 export declare class Assessment {
     title: string;
@@ -15,8 +15,9 @@ export declare class Assessment {
     shuffleOptions: boolean;
     maxAttempts: number;
     isSimulator: boolean;
+    allowedLateStudents: Types.ObjectId[];
 }
-export declare const AssessmentSchema: import("mongoose").Schema<Assessment, import("mongoose").Model<Assessment, any, any, any, Document<unknown, any, Assessment, any, {}> & Assessment & {
+export declare const AssessmentSchema: MongooseSchema<Assessment, import("mongoose").Model<Assessment, any, any, any, Document<unknown, any, Assessment, any, {}> & Assessment & {
     _id: Types.ObjectId;
 } & {
     __v: number;

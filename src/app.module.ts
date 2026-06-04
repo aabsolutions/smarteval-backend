@@ -12,6 +12,8 @@ import { AssessmentAttemptsModule } from './assessment-attempts/assessment-attem
 import { NotificationsModule } from './notifications/notifications.module';
 import { InstitutionsModule } from './institutions/institutions.module';
 import { TeachersModule } from './teachers/teachers.module';
+import { CloudinaryModule } from './cloudinary/cloudinary.module';
+import { LateRequestsModule } from './late-requests/late-requests.module';
 
 @Module({
   imports: [
@@ -46,6 +48,8 @@ import { TeachersModule } from './teachers/teachers.module';
     NotificationsModule,
     InstitutionsModule,
     TeachersModule,
+    CloudinaryModule,
+    LateRequestsModule,
   ],
 })
 export class AppModule {}

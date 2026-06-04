@@ -19,7 +19,7 @@ export class AssessmentsController {
 
   @Get('teacher')
   @Roles('TEACHER', 'ADMIN', 'SUPERADMIN')
-  findAllByTeacher(@Request() req) {
+  async findAllByTeacher(@Request() req) {
     return this.assessmentsService.findAllByTeacher(req.user.userId);
   }
 

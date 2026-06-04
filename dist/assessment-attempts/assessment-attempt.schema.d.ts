@@ -35,6 +35,7 @@ export declare class AssessmentAttempt {
     };
     isTimeout: boolean;
     outOfTime: boolean;
+    isArchived: boolean;
 }
 export declare const AssessmentAttemptSchema: import("mongoose").Schema<AssessmentAttempt, import("mongoose").Model<AssessmentAttempt, any, any, any, Document<unknown, any, AssessmentAttempt, any, {}> & AssessmentAttempt & {
     _id: Types.ObjectId;

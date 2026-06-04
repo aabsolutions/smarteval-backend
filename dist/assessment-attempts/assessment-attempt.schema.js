@@ -114,6 +114,10 @@ __decorate([
     (0, mongoose_1.Prop)({ default: false }),
     __metadata("design:type", Boolean)
 ], AssessmentAttempt.prototype, "outOfTime", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: false }),
+    __metadata("design:type", Boolean)
+], AssessmentAttempt.prototype, "isArchived", void 0);
 exports.AssessmentAttempt = AssessmentAttempt = __decorate([
     (0, mongoose_1.Schema)({ timestamps: true })
 ], AssessmentAttempt);

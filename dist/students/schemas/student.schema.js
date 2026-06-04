@@ -28,10 +28,6 @@ __decorate([
     __metadata("design:type", String)
 ], Student.prototype, "email", void 0);
 __decorate([
-    (0, mongoose_1.Prop)(),
-    __metadata("design:type", String)
-], Student.prototype, "password", void 0);
-__decorate([
     (0, mongoose_1.Prop)({ type: mongoose_2.Schema.Types.ObjectId, ref: 'Group', required: true }),
     __metadata("design:type", mongoose_2.Schema.Types.ObjectId)
 ], Student.prototype, "groupId", void 0);

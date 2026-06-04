@@ -32,7 +32,8 @@ let ReportsService = class ReportsService {
             throw new common_1.NotFoundException('Examen no encontrado');
         const attemptsRaw = await this.attemptModel.find({
             assessmentId: new mongoose_2.Types.ObjectId(assessmentId),
-            status: assessment_attempt_schema_1.AttemptStatus.COMPLETED
+            status: assessment_attempt_schema_1.AttemptStatus.COMPLETED,
+            isArchived: { $ne: true }
         })
             .populate('studentId', 'name username email')
             .sort({ startTime: 1 })
@@ -191,7 +192,8 @@ let ReportsService = class ReportsService {
         }
         const attempts = await this.attemptModel.find({
             assessmentId: new mongoose_2.Types.ObjectId(assessmentId),
-            status: assessment_attempt_schema_1.AttemptStatus.COMPLETED
+            status: assessment_attempt_schema_1.AttemptStatus.COMPLETED,
+            isArchived: { $ne: true }
         })
             .populate('studentId', '_id')
             .exec();

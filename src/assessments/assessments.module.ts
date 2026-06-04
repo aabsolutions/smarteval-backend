@@ -6,6 +6,7 @@ import { Assessment, AssessmentSchema } from './assessment.schema';
 import { ReportsController } from './reports.controller';
 import { ReportsService } from './reports.service';
 import { AssessmentAttempt, AssessmentAttemptSchema } from '../assessment-attempts/assessment-attempt.schema';
+import { LateRequest, LateRequestSchema } from '../late-requests/late-request.schema';
 
 import { StudentsModule } from '../students/students.module';
 import { NotificationsModule } from '../notifications/notifications.module';
@@ -14,7 +15,8 @@ import { NotificationsModule } from '../notifications/notifications.module';
   imports: [
     MongooseModule.forFeature([
       { name: Assessment.name, schema: AssessmentSchema },
-      { name: AssessmentAttempt.name, schema: AssessmentAttemptSchema }
+      { name: AssessmentAttempt.name, schema: AssessmentAttemptSchema },
+      { name: LateRequest.name, schema: LateRequestSchema }
     ]),
     StudentsModule,
     NotificationsModule

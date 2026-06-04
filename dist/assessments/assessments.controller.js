@@ -27,7 +27,7 @@ let AssessmentsController = class AssessmentsController {
     create(createDto, req) {
         return this.assessmentsService.create(createDto, req.user.userId);
     }
-    findAllByTeacher(req) {
+    async findAllByTeacher(req) {
         return this.assessmentsService.findAllByTeacher(req.user.userId);
     }
     findAvailableForStudent(req) {
@@ -59,7 +59,7 @@ __decorate([
     __param(0, (0, common_1.Request)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:returntype", Promise)
 ], AssessmentsController.prototype, "findAllByTeacher", null);
 __decorate([
     (0, common_1.Get)('student'),

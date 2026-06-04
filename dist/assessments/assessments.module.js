@@ -15,6 +15,7 @@ const assessment_schema_1 = require("./assessment.schema");
 const reports_controller_1 = require("./reports.controller");
 const reports_service_1 = require("./reports.service");
 const assessment_attempt_schema_1 = require("../assessment-attempts/assessment-attempt.schema");
+const late_request_schema_1 = require("../late-requests/late-request.schema");
 const students_module_1 = require("../students/students.module");
 const notifications_module_1 = require("../notifications/notifications.module");
 let AssessmentsModule = class AssessmentsModule {
@@ -25,7 +26,8 @@ exports.AssessmentsModule = AssessmentsModule = __decorate([
         imports: [
             mongoose_1.MongooseModule.forFeature([
                 { name: assessment_schema_1.Assessment.name, schema: assessment_schema_1.AssessmentSchema },
-                { name: assessment_attempt_schema_1.AssessmentAttempt.name, schema: assessment_attempt_schema_1.AssessmentAttemptSchema }
+                { name: assessment_attempt_schema_1.AssessmentAttempt.name, schema: assessment_attempt_schema_1.AssessmentAttemptSchema },
+                { name: late_request_schema_1.LateRequest.name, schema: late_request_schema_1.LateRequestSchema }
             ]),
             students_module_1.StudentsModule,
             notifications_module_1.NotificationsModule
