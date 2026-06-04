@@ -26,14 +26,19 @@ export class UsersController {
 
   @Roles('SUPERADMIN', 'ADMIN')
   @Get()
-  async findAll(@Request() req: any, @Query('page') page: string = '1', @Query('limit') limit: string = '10') {
+  async findAll(
+    @Request() req: any,
+    @Query('page') page: string = '1',
+    @Query('limit') limit: string = '10',
+    @Query('search') search?: string,
+  ) {
     const userRole = req.user.roles[0].name;
     // SUPERADMIN can see everyone. ADMIN can only see TEACHER and STUDENT.
     const allowedRoles = userRole === 'SUPERADMIN' 
       ? ['SUPERADMIN', 'ADMIN', 'TEACHER', 'STUDENT'] 
       : ['TEACHER', 'STUDENT'];
     
-    return this.usersService.findAll(allowedRoles, parseInt(page), parseInt(limit));
+    return this.usersService.findAll(allowedRoles, parseInt(page), parseInt(limit), search);
   }
 
   @Roles('SUPERADMIN', 'ADMIN')

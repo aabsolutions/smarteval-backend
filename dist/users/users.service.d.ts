@@ -10,7 +10,7 @@ export declare class UsersService implements OnModuleInit {
     onModuleInit(): Promise<void>;
     findByUsername(username: string): Promise<User | null>;
     findById(id: string): Promise<User | null>;
-    findAll(allowedRoles: string[], page?: number, limit?: number): Promise<{
+    findAll(allowedRoles: string[], page?: number, limit?: number, search?: string): Promise<{
         data: User[];
         total: number;
     }>;

@@ -4,7 +4,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 export declare class UsersController {
     private readonly usersService;
     constructor(usersService: UsersService);
-    findAll(req: any, page?: string, limit?: string): Promise<{
+    findAll(req: any, page?: string, limit?: string, search?: string): Promise<{
         data: import("./schemas/user.schema").User[];
         total: number;
     }>;

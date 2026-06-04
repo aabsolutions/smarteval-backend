@@ -60,6 +60,7 @@ let StudentsService = class StudentsService {
             userData.email = createStudentDto.email;
         }
         const newUser = await this.usersService.create(userData);
+        delete createStudentDto.password;
         const createdStudent = new this.studentModel(createStudentDto);
         await createdStudent.save();
         await this.notificationsService.create(newUser._id.toString(), '¡Bienvenido a la Plataforma!', `Hola ${createStudentDto.name}. Tu usuario de acceso es tu cédula/código y tu contraseña es la que te ha asignado el administrador.`, 'INFO');

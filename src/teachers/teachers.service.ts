@@ -48,6 +48,8 @@ export class TeachersService {
 
     await this.usersService.create(userData);
 
+    // Prevent saving plain text password in the teacher collection
+    delete createTeacherDto.password;
     const createdTeacher = new this.teacherModel(createTeacherDto);
     return createdTeacher.save();
   }

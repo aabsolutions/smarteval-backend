@@ -25,12 +25,22 @@ export class UsersService implements OnModuleInit {
     return this.userModel.findById(id).select('-password').exec();
   }
 
-  async findAll(allowedRoles: string[], page: number = 1, limit: number = 10): Promise<{ data: User[], total: number }> {
-    const query = { 'roles.name': { $in: allowedRoles } };
+  async findAll(allowedRoles: string[], page: number = 1, limit: number = 10, search?: string): Promise<{ data: User[], total: number }> {
+    const query: any = { 'roles.name': { $in: allowedRoles } };
+
+    if (search && search.trim()) {
+      const regex = new RegExp(search.trim(), 'i');
+      query.$or = [
+        { name: regex },
+        { username: regex },
+        { email: regex },
+      ];
+    }
+
     const skip = (page - 1) * limit;
     
     const [data, total] = await Promise.all([
-      this.userModel.find(query).select('-password').skip(skip).limit(limit).exec(),
+      this.userModel.find(query).select('-password').sort({ name: 1 }).skip(skip).limit(limit).exec(),
       this.userModel.countDocuments(query).exec()
     ]);
     

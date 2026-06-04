@@ -24,12 +24,12 @@ let UsersController = class UsersController {
     constructor(usersService) {
         this.usersService = usersService;
     }
-    async findAll(req, page = '1', limit = '10') {
+    async findAll(req, page = '1', limit = '10', search) {
         const userRole = req.user.roles[0].name;
         const allowedRoles = userRole === 'SUPERADMIN'
             ? ['SUPERADMIN', 'ADMIN', 'TEACHER', 'STUDENT']
             : ['TEACHER', 'STUDENT'];
-        return this.usersService.findAll(allowedRoles, parseInt(page), parseInt(limit));
+        return this.usersService.findAll(allowedRoles, parseInt(page), parseInt(limit), search);
     }
     async findOne(id, req) {
         const user = await this.usersService.findById(id);
@@ -98,8 +98,9 @@ __decorate([
     __param(0, (0, common_1.Request)()),
     __param(1, (0, common_1.Query)('page')),
     __param(2, (0, common_1.Query)('limit')),
+    __param(3, (0, common_1.Query)('search')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, String, String]),
+    __metadata("design:paramtypes", [Object, String, String, String]),
     __metadata("design:returntype", Promise)
 ], UsersController.prototype, "findAll", null);
 __decorate([

@@ -43,6 +43,7 @@ let InstitutionsController = class InstitutionsController {
 exports.InstitutionsController = InstitutionsController;
 __decorate([
     (0, common_1.Post)(),
+    (0, roles_decorator_1.Roles)('SUPERADMIN'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [create_institution_dto_1.CreateInstitutionDto]),
@@ -50,12 +51,14 @@ __decorate([
 ], InstitutionsController.prototype, "create", null);
 __decorate([
     (0, common_1.Get)(),
+    (0, roles_decorator_1.Roles)('ADMIN', 'SUPERADMIN'),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], InstitutionsController.prototype, "findAll", null);
 __decorate([
     (0, common_1.Get)(':id'),
+    (0, roles_decorator_1.Roles)('ADMIN', 'SUPERADMIN'),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
@@ -63,6 +66,7 @@ __decorate([
 ], InstitutionsController.prototype, "findOne", null);
 __decorate([
     (0, common_1.Put)(':id'),
+    (0, roles_decorator_1.Roles)('SUPERADMIN'),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -71,6 +75,7 @@ __decorate([
 ], InstitutionsController.prototype, "update", null);
 __decorate([
     (0, common_1.Delete)(':id'),
+    (0, roles_decorator_1.Roles)('SUPERADMIN'),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
@@ -78,7 +83,6 @@ __decorate([
 ], InstitutionsController.prototype, "remove", null);
 exports.InstitutionsController = InstitutionsController = __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)('SUPERADMIN'),
     (0, common_1.Controller)('institutions'),
     __metadata("design:paramtypes", [institutions_service_1.InstitutionsService])
 ], InstitutionsController);
