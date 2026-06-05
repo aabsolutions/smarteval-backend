@@ -21,4 +21,5 @@ export declare class AuthService {
         token_type: string;
         expires_in: number;
     }>;
+    getMe(userId: string): Promise<any>;
 }

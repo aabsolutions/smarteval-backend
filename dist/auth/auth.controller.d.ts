@@ -19,7 +19,7 @@ export declare class AuthController {
         token_type: string;
         expires_in: number;
     }>;
-    getProfile(req: any): {
+    getProfile(req: any): Promise<{
         user: any;
-    };
+    }>;
 }

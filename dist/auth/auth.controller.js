@@ -27,8 +27,9 @@ let AuthController = class AuthController {
     refresh(body) {
         return this.authService.refresh(body.refresh_token);
     }
-    getProfile(req) {
-        return { user: req.user };
+    async getProfile(req) {
+        const user = await this.authService.getMe(req.user.userId);
+        return { user };
     }
 };
 exports.AuthController = AuthController;
@@ -54,7 +55,7 @@ __decorate([
     __param(0, (0, common_1.Request)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:returntype", Promise)
 ], AuthController.prototype, "getProfile", null);
 exports.AuthController = AuthController = __decorate([
     (0, common_1.Controller)('auth'),
