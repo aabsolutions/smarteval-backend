@@ -81,6 +81,18 @@ let AuthService = class AuthService {
             throw new common_1.UnauthorizedException('Refresh token inválido o expirado');
         }
     }
+    async getMe(userId) {
+        const user = await this.usersService.findById(userId);
+        if (!user) {
+            throw new common_1.UnauthorizedException('Usuario no encontrado');
+        }
+        const userObj = user.toObject();
+        const id = userObj._id.toString();
+        delete userObj.password;
+        delete userObj._id;
+        delete userObj.__v;
+        return { id, ...userObj };
+    }
 };
 exports.AuthService = AuthService;
 exports.AuthService = AuthService = __decorate([
