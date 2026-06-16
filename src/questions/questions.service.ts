@@ -4,10 +4,22 @@ import { Model, Types } from 'mongoose';
 import { Question, QuestionDocument, QuestionType } from './question.schema';
 import { CreateQuestionDto } from './dto/create-question.dto';
 import { UpdateQuestionDto } from './dto/update-question.dto';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
 
 @Injectable()
 export class QuestionsService {
-  constructor(@InjectModel(Question.name) private questionModel: Model<QuestionDocument>) {}
+  constructor(
+    @InjectModel(Question.name) private questionModel: Model<QuestionDocument>,
+    private cloudinaryService: CloudinaryService
+  ) {}
+
+  async uploadImage(file: Express.Multer.File): Promise<{ url: string; publicId: string }> {
+    const uploadResult: any = await this.cloudinaryService.uploadImage(file);
+    return {
+      url: uploadResult.secure_url,
+      publicId: uploadResult.public_id,
+    };
+  }
 
   private validateMatchingQuestion(type: QuestionType, options?: string[], correctAnswers?: string[]) {
     if (type === QuestionType.MATCHING) {
@@ -89,6 +101,15 @@ export class QuestionsService {
     if (!deletedQuestion) {
       throw new NotFoundException(`Question #${id} not found or unauthorized`);
     }
+
+    if (deletedQuestion.imagePublicId) {
+      try {
+        await this.cloudinaryService.deleteImage(deletedQuestion.imagePublicId);
+      } catch (e) {
+        console.error('Failed to delete image from Cloudinary', e);
+      }
+    }
+
     return deletedQuestion;
   }
 }

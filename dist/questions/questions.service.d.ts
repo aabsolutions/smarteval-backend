@@ -2,9 +2,15 @@ import { Model } from 'mongoose';
 import { Question, QuestionDocument } from './question.schema';
 import { CreateQuestionDto } from './dto/create-question.dto';
 import { UpdateQuestionDto } from './dto/update-question.dto';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
 export declare class QuestionsService {
     private questionModel;
-    constructor(questionModel: Model<QuestionDocument>);
+    private cloudinaryService;
+    constructor(questionModel: Model<QuestionDocument>, cloudinaryService: CloudinaryService);
+    uploadImage(file: Express.Multer.File): Promise<{
+        url: string;
+        publicId: string;
+    }>;
     private validateMatchingQuestion;
     create(createQuestionDto: CreateQuestionDto, teacherId: string): Promise<Question>;
     createBulk(questions: CreateQuestionDto[], teacherId: string): Promise<Question[]>;

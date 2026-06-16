@@ -7,4 +7,6 @@ export declare class CreateQuestionDto {
     points: number;
     difficulty: QuestionDifficulty;
     topicId: string;
+    imageUrl?: string;
+    imagePublicId?: string;
 }

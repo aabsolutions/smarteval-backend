@@ -5,6 +5,10 @@ import { CreateBulkQuestionsDto } from './dto/create-bulk-questions.dto';
 export declare class QuestionsController {
     private readonly questionsService;
     constructor(questionsService: QuestionsService);
+    uploadImage(file: Express.Multer.File): Promise<{
+        url: string;
+        publicId: string;
+    }>;
     create(createQuestionDto: CreateQuestionDto, req: any): Promise<import("./question.schema").Question>;
     createBulk(createBulkDto: CreateBulkQuestionsDto, req: any): Promise<import("./question.schema").Question[]>;
     findAll(topicId: string, req: any): Promise<import("./question.schema").Question[]>;

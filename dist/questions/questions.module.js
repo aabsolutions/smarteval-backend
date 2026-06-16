@@ -12,12 +12,16 @@ const mongoose_1 = require("@nestjs/mongoose");
 const questions_service_1 = require("./questions.service");
 const questions_controller_1 = require("./questions.controller");
 const question_schema_1 = require("./question.schema");
+const cloudinary_module_1 = require("../cloudinary/cloudinary.module");
 let QuestionsModule = class QuestionsModule {
 };
 exports.QuestionsModule = QuestionsModule;
 exports.QuestionsModule = QuestionsModule = __decorate([
     (0, common_1.Module)({
-        imports: [mongoose_1.MongooseModule.forFeature([{ name: question_schema_1.Question.name, schema: question_schema_1.QuestionSchema }])],
+        imports: [
+            mongoose_1.MongooseModule.forFeature([{ name: question_schema_1.Question.name, schema: question_schema_1.QuestionSchema }]),
+            cloudinary_module_1.CloudinaryModule
+        ],
         controllers: [questions_controller_1.QuestionsController],
         providers: [questions_service_1.QuestionsService],
     })

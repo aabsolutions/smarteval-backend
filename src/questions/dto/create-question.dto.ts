@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString, IsArray, IsNumber, IsEnum, IsMongoId } from 'class-validator';
+import { IsNotEmpty, IsString, IsArray, IsNumber, IsEnum, IsMongoId, IsOptional } from 'class-validator';
 import { QuestionDifficulty, QuestionType } from '../question.schema';
 
 export class CreateQuestionDto {
@@ -26,4 +26,12 @@ export class CreateQuestionDto {
 
   @IsMongoId()
   topicId: string;
+
+  @IsOptional()
+  @IsString()
+  imageUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  imagePublicId?: string;
 }

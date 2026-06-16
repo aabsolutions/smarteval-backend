@@ -109,7 +109,8 @@ let AssessmentAttemptsService = class AssessmentAttemptsService {
                 options: options,
                 correctAnswers: correctAnswers,
                 matchingOptions: matchingOptions,
-                points: q.points || 1
+                points: q.points || 1,
+                imageUrl: q.imageUrl
             };
         });
         const newAttempt = new this.attemptModel({

@@ -42,6 +42,12 @@ export class Question {
 
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
   teacherId: Types.ObjectId;
+
+  @Prop({ required: false })
+  imageUrl?: string;
+
+  @Prop({ required: false })
+  imagePublicId?: string;
 }
 
 export const QuestionSchema = SchemaFactory.createForClass(Question);

@@ -1,4 +1,5 @@
-import { Controller, Get, Post, Body, Put, Param, Delete, UseGuards, Request, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Put, Param, Delete, UseGuards, Request, Query, UseInterceptors, UploadedFile, BadRequestException } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { QuestionsService } from './questions.service';
 import { CreateQuestionDto } from './dto/create-question.dto';
 import { UpdateQuestionDto } from './dto/update-question.dto';
@@ -12,6 +13,15 @@ import { Roles } from '../auth/decorators/roles.decorator';
 @Roles('TEACHER', 'ADMIN', 'SUPERADMIN')
 export class QuestionsController {
   constructor(private readonly questionsService: QuestionsService) {}
+
+  @Post('upload-image')
+  @UseInterceptors(FileInterceptor('image'))
+  async uploadImage(@UploadedFile() file: Express.Multer.File) {
+    if (!file) {
+      throw new BadRequestException('No se proporcionó ninguna imagen');
+    }
+    return this.questionsService.uploadImage(file);
+  }
 
   @Post()
   create(@Body() createQuestionDto: CreateQuestionDto, @Request() req) {
