@@ -12,6 +12,7 @@ declare class SnapshotQuestion {
     correctAnswers: string[];
     matchingOptions?: string[];
     points: number;
+    imageUrl?: string;
 }
 declare class StudentAnswer {
     questionId: string;

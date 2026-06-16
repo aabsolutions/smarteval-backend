@@ -47,6 +47,10 @@ __decorate([
     (0, mongoose_1.Prop)({ required: true }),
     __metadata("design:type", Number)
 ], SnapshotQuestion.prototype, "points", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ required: false }),
+    __metadata("design:type", String)
+], SnapshotQuestion.prototype, "imageUrl", void 0);
 SnapshotQuestion = __decorate([
     (0, mongoose_1.Schema)({ _id: false })
 ], SnapshotQuestion);

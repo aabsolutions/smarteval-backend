@@ -21,6 +21,8 @@ export declare class Question {
     difficulty: QuestionDifficulty;
     topicId: Types.ObjectId;
     teacherId: Types.ObjectId;
+    imageUrl?: string;
+    imagePublicId?: string;
 }
 export declare const QuestionSchema: import("mongoose").Schema<Question, import("mongoose").Model<Question, any, any, any, Document<unknown, any, Question, any, {}> & Question & {
     _id: Types.ObjectId;

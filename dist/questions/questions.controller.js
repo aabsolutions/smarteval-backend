@@ -14,6 +14,7 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.QuestionsController = void 0;
 const common_1 = require("@nestjs/common");
+const platform_express_1 = require("@nestjs/platform-express");
 const questions_service_1 = require("./questions.service");
 const create_question_dto_1 = require("./dto/create-question.dto");
 const update_question_dto_1 = require("./dto/update-question.dto");
@@ -24,6 +25,12 @@ const roles_decorator_1 = require("../auth/decorators/roles.decorator");
 let QuestionsController = class QuestionsController {
     constructor(questionsService) {
         this.questionsService = questionsService;
+    }
+    async uploadImage(file) {
+        if (!file) {
+            throw new common_1.BadRequestException('No se proporcionó ninguna imagen');
+        }
+        return this.questionsService.uploadImage(file);
     }
     create(createQuestionDto, req) {
         return this.questionsService.create(createQuestionDto, req.user.userId);
@@ -45,6 +52,14 @@ let QuestionsController = class QuestionsController {
     }
 };
 exports.QuestionsController = QuestionsController;
+__decorate([
+    (0, common_1.Post)('upload-image'),
+    (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('image')),
+    __param(0, (0, common_1.UploadedFile)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], QuestionsController.prototype, "uploadImage", null);
 __decorate([
     (0, common_1.Post)(),
     __param(0, (0, common_1.Body)()),

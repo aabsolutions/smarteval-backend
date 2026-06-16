@@ -61,6 +61,14 @@ __decorate([
     (0, mongoose_1.Prop)({ type: mongoose_2.Types.ObjectId, ref: 'User', required: true }),
     __metadata("design:type", mongoose_2.Types.ObjectId)
 ], Question.prototype, "teacherId", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ required: false }),
+    __metadata("design:type", String)
+], Question.prototype, "imageUrl", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ required: false }),
+    __metadata("design:type", String)
+], Question.prototype, "imagePublicId", void 0);
 exports.Question = Question = __decorate([
     (0, mongoose_1.Schema)({ timestamps: true })
 ], Question);

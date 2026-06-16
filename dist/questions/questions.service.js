@@ -17,9 +17,18 @@ const common_1 = require("@nestjs/common");
 const mongoose_1 = require("@nestjs/mongoose");
 const mongoose_2 = require("mongoose");
 const question_schema_1 = require("./question.schema");
+const cloudinary_service_1 = require("../cloudinary/cloudinary.service");
 let QuestionsService = class QuestionsService {
-    constructor(questionModel) {
+    constructor(questionModel, cloudinaryService) {
         this.questionModel = questionModel;
+        this.cloudinaryService = cloudinaryService;
+    }
+    async uploadImage(file) {
+        const uploadResult = await this.cloudinaryService.uploadImage(file);
+        return {
+            url: uploadResult.secure_url,
+            publicId: uploadResult.public_id,
+        };
     }
     validateMatchingQuestion(type, options, correctAnswers) {
         if (type === question_schema_1.QuestionType.MATCHING) {
@@ -88,6 +97,14 @@ let QuestionsService = class QuestionsService {
         if (!deletedQuestion) {
             throw new common_1.NotFoundException(`Question #${id} not found or unauthorized`);
         }
+        if (deletedQuestion.imagePublicId) {
+            try {
+                await this.cloudinaryService.deleteImage(deletedQuestion.imagePublicId);
+            }
+            catch (e) {
+                console.error('Failed to delete image from Cloudinary', e);
+            }
+        }
         return deletedQuestion;
     }
 };
@@ -95,6 +112,7 @@ exports.QuestionsService = QuestionsService;
 exports.QuestionsService = QuestionsService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, mongoose_1.InjectModel)(question_schema_1.Question.name)),
-    __metadata("design:paramtypes", [mongoose_2.Model])
+    __metadata("design:paramtypes", [mongoose_2.Model,
+        cloudinary_service_1.CloudinaryService])
 ], QuestionsService);
 //# sourceMappingURL=questions.service.js.map

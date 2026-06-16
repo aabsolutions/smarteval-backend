@@ -30,6 +30,9 @@ class SnapshotQuestion {
 
   @Prop({ required: true })
   points: number;
+
+  @Prop({ required: false })
+  imageUrl?: string;
 }
 
 @Schema({ _id: false })
