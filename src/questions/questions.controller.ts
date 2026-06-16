@@ -52,4 +52,14 @@ export class QuestionsController {
   remove(@Param('id') id: string, @Request() req) {
     return this.questionsService.remove(id, req.user.userId);
   }
+
+  @Post('bulk-points')
+  updateBulkPoints(@Body() body: { ids: string[], points: number }, @Request() req) {
+    return this.questionsService.updateBulkPoints(body.ids, body.points, req.user.userId);
+  }
+
+  @Post('bulk-delete')
+  removeBulk(@Body() body: { ids: string[] }, @Request() req) {
+    return this.questionsService.removeBulk(body.ids, req.user.userId);
+  }
 }
