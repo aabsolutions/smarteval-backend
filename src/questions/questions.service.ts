@@ -112,4 +112,19 @@ export class QuestionsService {
 
     return deletedQuestion;
   }
+  async removeBulk(ids: string[], teacherId: string): Promise<any> {
+    const questions = await this.questionModel.find({ _id: { $in: ids }, teacherId: new Types.ObjectId(teacherId) }).exec();
+    const publicIds = questions.map(q => q.imagePublicId).filter(id => id);
+    if (publicIds.length > 0) {
+      publicIds.forEach(id => this.cloudinaryService.deleteImage(id as string).catch(e => console.error('Cloudinary delete error:', e)));
+    }
+    return this.questionModel.deleteMany({ _id: { $in: ids }, teacherId: new Types.ObjectId(teacherId) }).exec();
+  }
+
+  async updateBulkPoints(ids: string[], points: number, teacherId: string): Promise<any> {
+    return this.questionModel.updateMany(
+      { _id: { $in: ids }, teacherId: new Types.ObjectId(teacherId) },
+      { $set: { points } }
+    ).exec();
+  }
 }
