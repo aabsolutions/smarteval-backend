@@ -15,4 +15,11 @@ export declare class QuestionsController {
     findOne(id: string, req: any): Promise<import("./question.schema").Question>;
     update(id: string, updateQuestionDto: UpdateQuestionDto, req: any): Promise<import("./question.schema").Question>;
     remove(id: string, req: any): Promise<import("./question.schema").Question>;
+    updateBulkPoints(body: {
+        ids: string[];
+        points: number;
+    }, req: any): Promise<any>;
+    removeBulk(body: {
+        ids: string[];
+    }, req: any): Promise<any>;
 }
