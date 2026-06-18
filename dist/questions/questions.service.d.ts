@@ -18,4 +18,6 @@ export declare class QuestionsService {
     findOne(id: string, teacherId: string): Promise<Question>;
     update(id: string, updateQuestionDto: UpdateQuestionDto, teacherId: string): Promise<Question>;
     remove(id: string, teacherId: string): Promise<Question>;
+    removeBulk(ids: string[], teacherId: string): Promise<any>;
+    updateBulkPoints(ids: string[], points: number, teacherId: string): Promise<any>;
 }

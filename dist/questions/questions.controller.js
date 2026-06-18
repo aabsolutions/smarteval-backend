@@ -50,6 +50,12 @@ let QuestionsController = class QuestionsController {
     remove(id, req) {
         return this.questionsService.remove(id, req.user.userId);
     }
+    updateBulkPoints(body, req) {
+        return this.questionsService.updateBulkPoints(body.ids, body.points, req.user.userId);
+    }
+    removeBulk(body, req) {
+        return this.questionsService.removeBulk(body.ids, req.user.userId);
+    }
 };
 exports.QuestionsController = QuestionsController;
 __decorate([
@@ -109,6 +115,22 @@ __decorate([
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", void 0)
 ], QuestionsController.prototype, "remove", null);
+__decorate([
+    (0, common_1.Post)('bulk-points'),
+    __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", void 0)
+], QuestionsController.prototype, "updateBulkPoints", null);
+__decorate([
+    (0, common_1.Post)('bulk-delete'),
+    __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", void 0)
+], QuestionsController.prototype, "removeBulk", null);
 exports.QuestionsController = QuestionsController = __decorate([
     (0, common_1.Controller)('questions'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),

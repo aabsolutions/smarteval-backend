@@ -107,6 +107,17 @@ let QuestionsService = class QuestionsService {
         }
         return deletedQuestion;
     }
+    async removeBulk(ids, teacherId) {
+        const questions = await this.questionModel.find({ _id: { $in: ids }, teacherId: new mongoose_2.Types.ObjectId(teacherId) }).exec();
+        const publicIds = questions.map(q => q.imagePublicId).filter(id => id);
+        if (publicIds.length > 0) {
+            publicIds.forEach(id => this.cloudinaryService.deleteImage(id).catch(e => console.error('Cloudinary delete error:', e)));
+        }
+        return this.questionModel.deleteMany({ _id: { $in: ids }, teacherId: new mongoose_2.Types.ObjectId(teacherId) }).exec();
+    }
+    async updateBulkPoints(ids, points, teacherId) {
+        return this.questionModel.updateMany({ _id: { $in: ids }, teacherId: new mongoose_2.Types.ObjectId(teacherId) }, { $set: { points } }).exec();
+    }
 };
 exports.QuestionsService = QuestionsService;
 exports.QuestionsService = QuestionsService = __decorate([
