@@ -47,4 +47,10 @@ export class StudentsController {
   remove(@Param('id') id: string) {
     return this.studentsService.remove(id);
   }
+
+  @Roles('SUPERADMIN', 'ADMIN')
+  @Post(':id/reset-password')
+  resetPassword(@Param('id') id: string) {
+    return this.studentsService.resetPassword(id);
+  }
 }

@@ -186,4 +186,13 @@ export class StudentsService {
     const users = await this.usersService.findAll(['STUDENT'], 1, 10000);
     return users.data.filter(u => identifiers.includes(u.username));
   }
+
+  async resetPassword(id: string): Promise<any> {
+    const student = await this.findOne(id);
+    const user = await this.usersService.findByUsername(student.identifier);
+    if (!user) {
+      throw new NotFoundException('Usuario de acceso no encontrado para este estudiante');
+    }
+    return this.usersService.resetPassword(user._id.toString());
+  }
 }

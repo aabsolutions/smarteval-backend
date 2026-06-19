@@ -20,4 +20,5 @@ export declare class StudentsService {
     remove(id: string): Promise<Student>;
     createBulk(createStudentDtos: CreateStudentDto[]): Promise<Student[]>;
     getUsersForGroups(groupIds: string[]): Promise<any[]>;
+    resetPassword(id: string): Promise<any>;
 }

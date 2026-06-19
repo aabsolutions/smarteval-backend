@@ -11,4 +11,5 @@ export declare class StudentsController {
     findOne(id: string): Promise<import("./schemas/student.schema").Student>;
     update(id: string, updateStudentDto: UpdateStudentDto): Promise<import("./schemas/student.schema").Student>;
     remove(id: string): Promise<import("./schemas/student.schema").Student>;
+    resetPassword(id: string): Promise<any>;
 }
