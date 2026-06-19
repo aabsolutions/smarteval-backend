@@ -43,6 +43,9 @@ let StudentsController = class StudentsController {
     remove(id) {
         return this.studentsService.remove(id);
     }
+    resetPassword(id) {
+        return this.studentsService.resetPassword(id);
+    }
 };
 exports.StudentsController = StudentsController;
 __decorate([
@@ -93,6 +96,14 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], StudentsController.prototype, "remove", null);
+__decorate([
+    (0, roles_decorator_1.Roles)('SUPERADMIN', 'ADMIN'),
+    (0, common_1.Post)(':id/reset-password'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], StudentsController.prototype, "resetPassword", null);
 exports.StudentsController = StudentsController = __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
     (0, common_1.Controller)('students'),

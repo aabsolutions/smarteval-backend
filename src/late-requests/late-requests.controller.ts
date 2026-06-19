@@ -22,7 +22,7 @@ export class LateRequestsController {
     @UploadedFiles() files: Express.Multer.File[]
   ) {
     try {
-      return await this.lateRequestsService.createRequest(req.user.userId, teacherId, assessmentId, reason, files);
+      return await this.lateRequestsService.createRequest(req.user.userId || req.user.sub, teacherId, assessmentId, reason, files);
     } catch (e) {
       throw new BadRequestException(e.message || 'Unknown error during createRequest');
     }
@@ -37,19 +37,19 @@ export class LateRequestsController {
     @Body('reason') reason: string,
     @UploadedFiles() files: Express.Multer.File[]
   ) {
-    return this.lateRequestsService.updateRequest(id, req.user.userId, reason, files);
+    return this.lateRequestsService.updateRequest(id, req.user.userId || req.user.sub, reason, files);
   }
 
   @Get('student')
   @Roles('STUDENT')
   async getStudentRequests(@Request() req) {
-    return this.lateRequestsService.findByStudent(req.user.userId);
+    return this.lateRequestsService.findByStudent(req.user.userId || req.user.sub);
   }
 
   @Get('teacher')
   @Roles('TEACHER')
   async getTeacherRequests(@Request() req) {
-    return this.lateRequestsService.findByTeacher(req.user.userId);
+    return this.lateRequestsService.findByTeacher(req.user.userId || req.user.sub);
   }
 
   @Patch(':id/status')
@@ -61,7 +61,7 @@ export class LateRequestsController {
     @Body('teacherComment') teacherComment?: string,
     @Body('extensionUntil') extensionUntil?: string
   ) {
-    return this.lateRequestsService.updateStatus(id, req.user.userId, status, teacherComment, extensionUntil);
+    return this.lateRequestsService.updateStatus(id, req.user.userId || req.user.sub, status, teacherComment, extensionUntil);
   }
 
   @Patch(':id/cancel')
@@ -70,7 +70,7 @@ export class LateRequestsController {
     @Request() req,
     @Param('id') id: string
   ) {
-    return this.lateRequestsService.cancelRequest(id, req.user.userId);
+    return this.lateRequestsService.cancelRequest(id, req.user.userId || req.user.sub);
   }
 }
 

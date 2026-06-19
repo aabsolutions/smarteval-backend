@@ -26,26 +26,26 @@ let LateRequestsController = class LateRequestsController {
     }
     async createRequest(req, teacherId, assessmentId, reason, files) {
         try {
-            return await this.lateRequestsService.createRequest(req.user.userId, teacherId, assessmentId, reason, files);
+            return await this.lateRequestsService.createRequest(req.user.userId || req.user.sub, teacherId, assessmentId, reason, files);
         }
         catch (e) {
             throw new common_1.BadRequestException(e.message || 'Unknown error during createRequest');
         }
     }
     async updateRequest(req, id, reason, files) {
-        return this.lateRequestsService.updateRequest(id, req.user.userId, reason, files);
+        return this.lateRequestsService.updateRequest(id, req.user.userId || req.user.sub, reason, files);
     }
     async getStudentRequests(req) {
-        return this.lateRequestsService.findByStudent(req.user.userId);
+        return this.lateRequestsService.findByStudent(req.user.userId || req.user.sub);
     }
     async getTeacherRequests(req) {
-        return this.lateRequestsService.findByTeacher(req.user.userId);
+        return this.lateRequestsService.findByTeacher(req.user.userId || req.user.sub);
     }
     async updateStatus(req, id, status, teacherComment, extensionUntil) {
-        return this.lateRequestsService.updateStatus(id, req.user.userId, status, teacherComment, extensionUntil);
+        return this.lateRequestsService.updateStatus(id, req.user.userId || req.user.sub, status, teacherComment, extensionUntil);
     }
     async cancelRequest(req, id) {
-        return this.lateRequestsService.cancelRequest(id, req.user.userId);
+        return this.lateRequestsService.cancelRequest(id, req.user.userId || req.user.sub);
     }
 };
 exports.LateRequestsController = LateRequestsController;
