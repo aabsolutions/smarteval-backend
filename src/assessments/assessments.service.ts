@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Assessment, AssessmentDocument } from './assessment.schema';
@@ -7,12 +7,14 @@ import { CreateAssessmentDto } from './dto/create-assessment.dto';
 import { NotificationsService } from '../notifications/notifications.service';
 import { StudentsService } from '../students/students.service';
 import { LateRequest, LateRequestDocument, LateRequestStatus } from '../late-requests/late-request.schema';
+import { Question, QuestionDocument } from '../questions/question.schema';
 
 @Injectable()
 export class AssessmentsService {
   constructor(
     @InjectModel(Assessment.name) private assessmentModel: Model<AssessmentDocument>,
     @InjectModel(LateRequest.name) private lateRequestModel: Model<LateRequestDocument>,
+    @InjectModel(Question.name) private questionModel: Model<QuestionDocument>,
     private notificationsService: NotificationsService,
     private studentsService: StudentsService
   ) {}
@@ -93,6 +95,36 @@ export class AssessmentsService {
       }
       return a;
     });
+  }
+
+  async getFlashcards(assessmentId: string, username: string, userId: string): Promise<any> {
+    const availableAssessments = await this.findAvailableForStudentUser(username, userId);
+    const assessment = availableAssessments.find(a => a._id.toString() === assessmentId);
+    
+    if (!assessment) {
+      throw new NotFoundException('Examen no encontrado o no tienes acceso para estudiarlo.');
+    }
+
+    const questions = await this.questionModel.find({ topicId: assessment.topicId._id || assessment.topicId }).lean().exec();
+
+    if (questions.length === 0) {
+      throw new BadRequestException('No hay preguntas disponibles en este tema.');
+    }
+
+    // Mezclar las preguntas (shuffle)
+    const shuffled = questions.sort(() => 0.5 - Math.random());
+
+    return {
+      flashcardsTimeLimitMinutes: assessment.flashcardsTimeLimitMinutes || 0,
+      questions: shuffled.map(q => ({
+        questionId: q._id.toString(),
+        type: q.type,
+        statement: q.statement,
+        options: q.options || [],
+        correctAnswers: q.correctAnswers || [],
+        imageUrl: q.imageUrl
+      }))
+    };
   }
 
   async findOne(id: string): Promise<any> {

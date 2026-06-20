@@ -20,10 +20,12 @@ const assessment_schema_1 = require("./assessment.schema");
 const notifications_service_1 = require("../notifications/notifications.service");
 const students_service_1 = require("../students/students.service");
 const late_request_schema_1 = require("../late-requests/late-request.schema");
+const question_schema_1 = require("../questions/question.schema");
 let AssessmentsService = class AssessmentsService {
-    constructor(assessmentModel, lateRequestModel, notificationsService, studentsService) {
+    constructor(assessmentModel, lateRequestModel, questionModel, notificationsService, studentsService) {
         this.assessmentModel = assessmentModel;
         this.lateRequestModel = lateRequestModel;
+        this.questionModel = questionModel;
         this.notificationsService = notificationsService;
         this.studentsService = studentsService;
     }
@@ -89,6 +91,29 @@ let AssessmentsService = class AssessmentsService {
             return a;
         });
     }
+    async getFlashcards(assessmentId, username, userId) {
+        const availableAssessments = await this.findAvailableForStudentUser(username, userId);
+        const assessment = availableAssessments.find(a => a._id.toString() === assessmentId);
+        if (!assessment) {
+            throw new common_1.NotFoundException('Examen no encontrado o no tienes acceso para estudiarlo.');
+        }
+        const questions = await this.questionModel.find({ topicId: assessment.topicId._id || assessment.topicId }).lean().exec();
+        if (questions.length === 0) {
+            throw new common_1.BadRequestException('No hay preguntas disponibles en este tema.');
+        }
+        const shuffled = questions.sort(() => 0.5 - Math.random());
+        return {
+            flashcardsTimeLimitMinutes: assessment.flashcardsTimeLimitMinutes || 0,
+            questions: shuffled.map(q => ({
+                questionId: q._id.toString(),
+                type: q.type,
+                statement: q.statement,
+                options: q.options || [],
+                correctAnswers: q.correctAnswers || [],
+                imageUrl: q.imageUrl
+            }))
+        };
+    }
     async findOne(id) {
         const assessment = await this.assessmentModel.findById(id)
             .populate('topicId', 'name')
@@ -138,7 +163,9 @@ exports.AssessmentsService = AssessmentsService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, mongoose_1.InjectModel)(assessment_schema_1.Assessment.name)),
     __param(1, (0, mongoose_1.InjectModel)(late_request_schema_1.LateRequest.name)),
+    __param(2, (0, mongoose_1.InjectModel)(question_schema_1.Question.name)),
     __metadata("design:paramtypes", [mongoose_2.Model,
+        mongoose_2.Model,
         mongoose_2.Model,
         notifications_service_1.NotificationsService,
         students_service_1.StudentsService])

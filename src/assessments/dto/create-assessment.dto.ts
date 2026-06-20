@@ -44,4 +44,8 @@ export class CreateAssessmentDto {
   @IsBoolean()
   @IsOptional()
   isSimulator?: boolean;
+
+  @IsNumber()
+  @IsOptional()
+  flashcardsTimeLimitMinutes?: number;
 }

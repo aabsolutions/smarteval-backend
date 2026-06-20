@@ -16,6 +16,7 @@ export declare class AssessmentsController {
             extensionUntil: any;
         }[];
     }>;
+    getFlashcards(id: string, req: any): Promise<any>;
     findOne(id: string): Promise<any>;
     update(id: string, updateDto: UpdateAssessmentDto, req: any): Promise<import("./assessment.schema").Assessment>;
     remove(id: string, req: any): Promise<any>;

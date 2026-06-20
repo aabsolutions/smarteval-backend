@@ -71,4 +71,9 @@ __decorate([
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", Boolean)
 ], CreateAssessmentDto.prototype, "isSimulator", void 0);
+__decorate([
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Number)
+], CreateAssessmentDto.prototype, "flashcardsTimeLimitMinutes", void 0);
 //# sourceMappingURL=create-assessment.dto.js.map

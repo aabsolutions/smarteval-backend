@@ -44,6 +44,12 @@ export class AssessmentsController {
     };
   }
 
+  @Get(':id/flashcards')
+  @Roles('STUDENT')
+  async getFlashcards(@Param('id') id: string, @Request() req) {
+    return this.assessmentsService.getFlashcards(id, req.user.username, req.user.userId || req.user.sub);
+  }
+
   @Get(':id')
   @Roles('TEACHER', 'ADMIN', 'SUPERADMIN', 'STUDENT')
   findOne(@Param('id') id: string) {

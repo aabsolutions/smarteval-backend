@@ -219,7 +219,7 @@ let AssessmentAttemptsService = class AssessmentAttemptsService {
         return this.attemptModel.deleteMany({ studentId: new mongoose_2.Types.ObjectId(studentId) }).exec();
     }
     async getAttemptDetails(attemptId, studentId) {
-        const attempt = await this.attemptModel.findOne({ _id: attemptId, studentId: new mongoose_2.Types.ObjectId(studentId) });
+        const attempt = await this.attemptModel.findOne({ _id: attemptId, studentId: new mongoose_2.Types.ObjectId(studentId) }).populate('assessmentId');
         if (!attempt)
             throw new common_1.NotFoundException('Attempt not found');
         return this.sanitizeAttempt(attempt);
