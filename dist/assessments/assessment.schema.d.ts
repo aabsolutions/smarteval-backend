@@ -16,6 +16,7 @@ export declare class Assessment {
     maxAttempts: number;
     isSimulator: boolean;
     allowedLateStudents: Types.ObjectId[];
+    flashcardsTimeLimitMinutes: number;
 }
 export declare const AssessmentSchema: MongooseSchema<Assessment, import("mongoose").Model<Assessment, any, any, any, Document<unknown, any, Assessment, any, {}> & Assessment & {
     _id: Types.ObjectId;

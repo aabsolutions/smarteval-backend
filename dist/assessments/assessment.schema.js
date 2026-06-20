@@ -75,6 +75,10 @@ __decorate([
     (0, mongoose_1.Prop)({ type: [{ type: mongoose_2.Schema.Types.ObjectId, ref: 'User' }], default: [] }),
     __metadata("design:type", Array)
 ], Assessment.prototype, "allowedLateStudents", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: 0 }),
+    __metadata("design:type", Number)
+], Assessment.prototype, "flashcardsTimeLimitMinutes", void 0);
 exports.Assessment = Assessment = __decorate([
     (0, mongoose_1.Schema)({ timestamps: true })
 ], Assessment);

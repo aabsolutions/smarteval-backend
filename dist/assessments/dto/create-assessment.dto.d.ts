@@ -12,4 +12,5 @@ export declare class CreateAssessmentDto {
     shuffleOptions: boolean;
     maxAttempts: number;
     isSimulator?: boolean;
+    flashcardsTimeLimitMinutes?: number;
 }

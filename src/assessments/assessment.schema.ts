@@ -49,6 +49,9 @@ export class Assessment {
 
   @Prop({ type: [{ type: MongooseSchema.Types.ObjectId, ref: 'User' }], default: [] })
   allowedLateStudents: Types.ObjectId[];
+
+  @Prop({ default: 0 })
+  flashcardsTimeLimitMinutes: number;
 }
 
 export const AssessmentSchema = SchemaFactory.createForClass(Assessment);
