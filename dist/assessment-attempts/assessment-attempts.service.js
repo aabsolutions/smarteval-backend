@@ -208,6 +208,26 @@ let AssessmentAttemptsService = class AssessmentAttemptsService {
             history: attempts.map(a => this.sanitizeAttempt(a))
         };
     }
+    async getStudentHistory(studentId) {
+        const attempts = await this.attemptModel.find({
+            studentId: new mongoose_2.Types.ObjectId(studentId),
+            status: assessment_attempt_schema_1.AttemptStatus.COMPLETED,
+            isArchived: { $ne: true }
+        })
+            .sort({ endTime: -1 })
+            .limit(5)
+            .populate({
+            path: 'assessmentId',
+            select: 'title topicId',
+            populate: {
+                path: 'topicId',
+                select: 'name'
+            }
+        })
+            .lean()
+            .exec();
+        return attempts;
+    }
     async getAttemptsByAssessment(assessmentId, studentId) {
         return this.attemptModel.find({
             assessmentId: new mongoose_2.Types.ObjectId(assessmentId),

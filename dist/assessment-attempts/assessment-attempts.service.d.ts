@@ -16,6 +16,7 @@ export declare class AssessmentAttemptsService {
         answers: string[];
     }[], antiCheatLog?: any, isTimeout?: boolean): Promise<AssessmentAttempt>;
     getAttemptStatus(assessmentId: string, studentId: string): Promise<any>;
+    getStudentHistory(studentId: string): Promise<any[]>;
     getAttemptsByAssessment(assessmentId: string, studentId: string): Promise<AssessmentAttempt[]>;
     removeAllForStudent(studentId: string): Promise<any>;
     getAttemptDetails(attemptId: string, studentId: string): Promise<any>;

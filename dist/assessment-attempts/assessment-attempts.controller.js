@@ -28,6 +28,9 @@ let AssessmentAttemptsController = class AssessmentAttemptsController {
     submitAttempt(attemptId, answers, antiCheatLog, isTimeout, req) {
         return this.attemptsService.submitAttempt(attemptId, req.user.userId || req.user.sub, answers, antiCheatLog, isTimeout);
     }
+    getStudentHistory(req) {
+        return this.attemptsService.getStudentHistory(req.user.userId || req.user.sub);
+    }
     getAttemptStatus(assessmentId, req) {
         return this.attemptsService.getAttemptStatus(assessmentId, req.user.userId || req.user.sub);
     }
@@ -63,6 +66,14 @@ __decorate([
     __metadata("design:paramtypes", [String, Array, Object, Boolean, Object]),
     __metadata("design:returntype", void 0)
 ], AssessmentAttemptsController.prototype, "submitAttempt", null);
+__decorate([
+    (0, common_1.Get)('student/history'),
+    (0, roles_decorator_1.Roles)('STUDENT'),
+    __param(0, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], AssessmentAttemptsController.prototype, "getStudentHistory", null);
 __decorate([
     (0, common_1.Get)('status/:assessmentId'),
     (0, roles_decorator_1.Roles)('STUDENT'),
