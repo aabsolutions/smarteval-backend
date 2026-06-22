@@ -230,6 +230,28 @@ export class AssessmentAttemptsService {
     };
   }
 
+  async getStudentHistory(studentId: string): Promise<any[]> {
+    const attempts = await this.attemptModel.find({
+      studentId: new Types.ObjectId(studentId),
+      status: AttemptStatus.COMPLETED,
+      isArchived: { $ne: true }
+    })
+    .sort({ endTime: -1 })
+    .limit(5)
+    .populate({
+      path: 'assessmentId',
+      select: 'title topicId',
+      populate: {
+        path: 'topicId',
+        select: 'name'
+      }
+    })
+    .lean()
+    .exec();
+
+    return attempts;
+  }
+
   async getAttemptsByAssessment(assessmentId: string, studentId: string): Promise<AssessmentAttempt[]> {
     return this.attemptModel.find({ 
       assessmentId: new Types.ObjectId(assessmentId),

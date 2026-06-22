@@ -7,6 +7,7 @@ export declare class AssessmentAttemptsController {
         questionId: string;
         answers: string[];
     }[], antiCheatLog: any, isTimeout: boolean, req: any): Promise<import("./assessment-attempt.schema").AssessmentAttempt>;
+    getStudentHistory(req: any): Promise<any[]>;
     getAttemptStatus(assessmentId: string, req: any): Promise<any>;
     getAttemptDetails(attemptId: string, req: any): Promise<any>;
     archiveAttempt(id: string): Promise<import("./assessment-attempt.schema").AssessmentAttempt>;

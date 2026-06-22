@@ -33,6 +33,12 @@ export class AssessmentAttemptsController {
     );
   }
 
+  @Get('student/history')
+  @Roles('STUDENT')
+  getStudentHistory(@Request() req) {
+    return this.attemptsService.getStudentHistory(req.user.userId || req.user.sub);
+  }
+
   @Get('status/:assessmentId')
   @Roles('STUDENT')
   getAttemptStatus(@Param('assessmentId') assessmentId: string, @Request() req) {
