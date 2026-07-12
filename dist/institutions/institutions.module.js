@@ -12,13 +12,15 @@ const mongoose_1 = require("@nestjs/mongoose");
 const institutions_controller_1 = require("./institutions.controller");
 const institutions_service_1 = require("./institutions.service");
 const institution_schema_1 = require("./schemas/institution.schema");
+const cloudinary_module_1 = require("../cloudinary/cloudinary.module");
 let InstitutionsModule = class InstitutionsModule {
 };
 exports.InstitutionsModule = InstitutionsModule;
 exports.InstitutionsModule = InstitutionsModule = __decorate([
     (0, common_1.Module)({
         imports: [
-            mongoose_1.MongooseModule.forFeature([{ name: institution_schema_1.Institution.name, schema: institution_schema_1.InstitutionSchema }])
+            mongoose_1.MongooseModule.forFeature([{ name: institution_schema_1.Institution.name, schema: institution_schema_1.InstitutionSchema }]),
+            cloudinary_module_1.CloudinaryModule
         ],
         controllers: [institutions_controller_1.InstitutionsController],
         providers: [institutions_service_1.InstitutionsService],

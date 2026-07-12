@@ -1,4 +1,5 @@
-import { Controller, Get, Post, Body, Put, Param, Delete, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Put, Param, Delete, UseGuards, UseInterceptors, UploadedFiles } from '@nestjs/common';
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { InstitutionsService } from './institutions.service';
 import { CreateInstitutionDto } from './dto/create-institution.dto';
 import { UpdateInstitutionDto } from './dto/update-institution.dto';
@@ -13,8 +14,15 @@ export class InstitutionsController {
 
   @Post()
   @Roles('SUPERADMIN')
-  create(@Body() createInstitutionDto: CreateInstitutionDto) {
-    return this.institutionsService.create(createInstitutionDto);
+  @UseInterceptors(FileFieldsInterceptor([
+    { name: 'logo', maxCount: 1 },
+    { name: 'cover', maxCount: 1 },
+  ]))
+  create(
+    @Body() createInstitutionDto: CreateInstitutionDto,
+    @UploadedFiles() files?: { logo?: Express.Multer.File[], cover?: Express.Multer.File[] }
+  ) {
+    return this.institutionsService.create(createInstitutionDto, files);
   }
 
   @Get()
@@ -31,8 +39,16 @@ export class InstitutionsController {
 
   @Put(':id')
   @Roles('SUPERADMIN')
-  update(@Param('id') id: string, @Body() updateInstitutionDto: UpdateInstitutionDto) {
-    return this.institutionsService.update(id, updateInstitutionDto);
+  @UseInterceptors(FileFieldsInterceptor([
+    { name: 'logo', maxCount: 1 },
+    { name: 'cover', maxCount: 1 },
+  ]))
+  update(
+    @Param('id') id: string, 
+    @Body() updateInstitutionDto: UpdateInstitutionDto,
+    @UploadedFiles() files?: { logo?: Express.Multer.File[], cover?: Express.Multer.File[] }
+  ) {
+    return this.institutionsService.update(id, updateInstitutionDto, files);
   }
 
   @Delete(':id')

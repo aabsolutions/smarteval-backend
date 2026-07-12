@@ -19,4 +19,9 @@ __decorate([
     (0, class_validator_1.IsNotEmpty)(),
     __metadata("design:type", String)
 ], CreateInstitutionDto.prototype, "name", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreateInstitutionDto.prototype, "reportIdentification", void 0);
 //# sourceMappingURL=create-institution.dto.js.map

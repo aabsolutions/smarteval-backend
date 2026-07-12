@@ -5,15 +5,31 @@ import { CreateInstitutionDto } from './dto/create-institution.dto';
 import { UpdateInstitutionDto } from './dto/update-institution.dto';
 import { Institution } from './schemas/institution.schema';
 
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
+
 @Injectable()
 export class InstitutionsService {
-  constructor(@InjectModel(Institution.name) private institutionModel: Model<Institution>) {}
+  constructor(
+    @InjectModel(Institution.name) private institutionModel: Model<Institution>,
+    private readonly cloudinaryService: CloudinaryService
+  ) {}
 
-  async create(createInstitutionDto: CreateInstitutionDto): Promise<Institution> {
+  async create(createInstitutionDto: CreateInstitutionDto, files?: { logo?: Express.Multer.File[], cover?: Express.Multer.File[] }): Promise<Institution> {
     const existing = await this.institutionModel.findOne({ name: createInstitutionDto.name }).exec();
     if (existing) {
       throw new ConflictException(`Institution with name ${createInstitutionDto.name} already exists`);
     }
+
+    if (files?.logo && files.logo.length > 0) {
+      const uploadResult = await this.cloudinaryService.uploadImage(files.logo[0], 'smarteval/institutions');
+      createInstitutionDto.logoUrl = uploadResult.secure_url;
+    }
+    
+    if (files?.cover && files.cover.length > 0) {
+      const uploadResult = await this.cloudinaryService.uploadImage(files.cover[0], 'smarteval/institutions');
+      createInstitutionDto.coverUrl = uploadResult.secure_url;
+    }
+
     const createdInstitution = new this.institutionModel(createInstitutionDto);
     return createdInstitution.save();
   }
@@ -30,7 +46,17 @@ export class InstitutionsService {
     return institution;
   }
 
-  async update(id: string, updateInstitutionDto: UpdateInstitutionDto): Promise<Institution> {
+  async update(id: string, updateInstitutionDto: UpdateInstitutionDto, files?: { logo?: Express.Multer.File[], cover?: Express.Multer.File[] }): Promise<Institution> {
+    if (files?.logo && files.logo.length > 0) {
+      const uploadResult = await this.cloudinaryService.uploadImage(files.logo[0], 'smarteval/institutions');
+      updateInstitutionDto.logoUrl = uploadResult.secure_url;
+    }
+    
+    if (files?.cover && files.cover.length > 0) {
+      const uploadResult = await this.cloudinaryService.uploadImage(files.cover[0], 'smarteval/institutions');
+      updateInstitutionDto.coverUrl = uploadResult.secure_url;
+    }
+
     const updatedInstitution = await this.institutionModel
       .findByIdAndUpdate(id, updateInstitutionDto, { new: true })
       .exec();

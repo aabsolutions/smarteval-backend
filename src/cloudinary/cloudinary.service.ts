@@ -5,10 +5,10 @@ const streamifier = require('streamifier');
 @Injectable()
 export class CloudinaryService {
   
-  uploadImage(file: Express.Multer.File): Promise<UploadApiResponse | UploadApiErrorResponse> {
+  uploadImage(file: Express.Multer.File, folder: string = 'smarteval/requests'): Promise<UploadApiResponse | UploadApiErrorResponse> {
     return new Promise((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
-        { folder: 'smarteval/requests' },
+        { folder: folder },
         (error, result) => {
           if (error) return reject(error);
           resolve(result);

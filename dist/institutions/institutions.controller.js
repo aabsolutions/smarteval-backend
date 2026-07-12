@@ -14,6 +14,7 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.InstitutionsController = void 0;
 const common_1 = require("@nestjs/common");
+const platform_express_1 = require("@nestjs/platform-express");
 const institutions_service_1 = require("./institutions.service");
 const create_institution_dto_1 = require("./dto/create-institution.dto");
 const update_institution_dto_1 = require("./dto/update-institution.dto");
@@ -24,8 +25,8 @@ let InstitutionsController = class InstitutionsController {
     constructor(institutionsService) {
         this.institutionsService = institutionsService;
     }
-    create(createInstitutionDto) {
-        return this.institutionsService.create(createInstitutionDto);
+    create(createInstitutionDto, files) {
+        return this.institutionsService.create(createInstitutionDto, files);
     }
     findAll() {
         return this.institutionsService.findAll();
@@ -33,8 +34,8 @@ let InstitutionsController = class InstitutionsController {
     findOne(id) {
         return this.institutionsService.findOne(id);
     }
-    update(id, updateInstitutionDto) {
-        return this.institutionsService.update(id, updateInstitutionDto);
+    update(id, updateInstitutionDto, files) {
+        return this.institutionsService.update(id, updateInstitutionDto, files);
     }
     remove(id) {
         return this.institutionsService.remove(id);
@@ -44,9 +45,14 @@ exports.InstitutionsController = InstitutionsController;
 __decorate([
     (0, common_1.Post)(),
     (0, roles_decorator_1.Roles)('SUPERADMIN'),
+    (0, common_1.UseInterceptors)((0, platform_express_1.FileFieldsInterceptor)([
+        { name: 'logo', maxCount: 1 },
+        { name: 'cover', maxCount: 1 },
+    ])),
     __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.UploadedFiles)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [create_institution_dto_1.CreateInstitutionDto]),
+    __metadata("design:paramtypes", [create_institution_dto_1.CreateInstitutionDto, Object]),
     __metadata("design:returntype", void 0)
 ], InstitutionsController.prototype, "create", null);
 __decorate([
@@ -67,10 +73,15 @@ __decorate([
 __decorate([
     (0, common_1.Put)(':id'),
     (0, roles_decorator_1.Roles)('SUPERADMIN'),
+    (0, common_1.UseInterceptors)((0, platform_express_1.FileFieldsInterceptor)([
+        { name: 'logo', maxCount: 1 },
+        { name: 'cover', maxCount: 1 },
+    ])),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
+    __param(2, (0, common_1.UploadedFiles)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, update_institution_dto_1.UpdateInstitutionDto]),
+    __metadata("design:paramtypes", [String, update_institution_dto_1.UpdateInstitutionDto, Object]),
     __metadata("design:returntype", void 0)
 ], InstitutionsController.prototype, "update", null);
 __decorate([

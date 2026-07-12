@@ -19,6 +19,18 @@ __decorate([
     (0, mongoose_1.Prop)({ required: true, unique: true, index: true }),
     __metadata("design:type", String)
 ], Institution.prototype, "name", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ required: false }),
+    __metadata("design:type", String)
+], Institution.prototype, "logoUrl", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ required: false }),
+    __metadata("design:type", String)
+], Institution.prototype, "coverUrl", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ required: false }),
+    __metadata("design:type", String)
+], Institution.prototype, "reportIdentification", void 0);
 exports.Institution = Institution = __decorate([
     (0, mongoose_1.Schema)({ timestamps: true })
 ], Institution);

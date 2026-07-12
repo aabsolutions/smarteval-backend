@@ -17,14 +17,24 @@ const common_1 = require("@nestjs/common");
 const mongoose_1 = require("@nestjs/mongoose");
 const mongoose_2 = require("mongoose");
 const institution_schema_1 = require("./schemas/institution.schema");
+const cloudinary_service_1 = require("../cloudinary/cloudinary.service");
 let InstitutionsService = class InstitutionsService {
-    constructor(institutionModel) {
+    constructor(institutionModel, cloudinaryService) {
         this.institutionModel = institutionModel;
+        this.cloudinaryService = cloudinaryService;
     }
-    async create(createInstitutionDto) {
+    async create(createInstitutionDto, files) {
         const existing = await this.institutionModel.findOne({ name: createInstitutionDto.name }).exec();
         if (existing) {
             throw new common_1.ConflictException(`Institution with name ${createInstitutionDto.name} already exists`);
+        }
+        if (files?.logo && files.logo.length > 0) {
+            const uploadResult = await this.cloudinaryService.uploadImage(files.logo[0], 'smarteval/institutions');
+            createInstitutionDto.logoUrl = uploadResult.secure_url;
+        }
+        if (files?.cover && files.cover.length > 0) {
+            const uploadResult = await this.cloudinaryService.uploadImage(files.cover[0], 'smarteval/institutions');
+            createInstitutionDto.coverUrl = uploadResult.secure_url;
         }
         const createdInstitution = new this.institutionModel(createInstitutionDto);
         return createdInstitution.save();
@@ -39,7 +49,15 @@ let InstitutionsService = class InstitutionsService {
         }
         return institution;
     }
-    async update(id, updateInstitutionDto) {
+    async update(id, updateInstitutionDto, files) {
+        if (files?.logo && files.logo.length > 0) {
+            const uploadResult = await this.cloudinaryService.uploadImage(files.logo[0], 'smarteval/institutions');
+            updateInstitutionDto.logoUrl = uploadResult.secure_url;
+        }
+        if (files?.cover && files.cover.length > 0) {
+            const uploadResult = await this.cloudinaryService.uploadImage(files.cover[0], 'smarteval/institutions');
+            updateInstitutionDto.coverUrl = uploadResult.secure_url;
+        }
         const updatedInstitution = await this.institutionModel
             .findByIdAndUpdate(id, updateInstitutionDto, { new: true })
             .exec();
@@ -60,6 +78,7 @@ exports.InstitutionsService = InstitutionsService;
 exports.InstitutionsService = InstitutionsService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, mongoose_1.InjectModel)(institution_schema_1.Institution.name)),
-    __metadata("design:paramtypes", [mongoose_2.Model])
+    __metadata("design:paramtypes", [mongoose_2.Model,
+        cloudinary_service_1.CloudinaryService])
 ], InstitutionsService);
 //# sourceMappingURL=institutions.service.js.map
