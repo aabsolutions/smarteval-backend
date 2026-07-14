@@ -87,6 +87,10 @@ __decorate([
     (0, mongoose_1.Prop)({ default: 0 }),
     __metadata("design:type", Number)
 ], Assessment.prototype, "flashcardsTimeLimitMinutes", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: false }),
+    __metadata("design:type", Boolean)
+], Assessment.prototype, "isArchived", void 0);
 exports.Assessment = Assessment = __decorate([
     (0, mongoose_1.Schema)({ timestamps: true })
 ], Assessment);

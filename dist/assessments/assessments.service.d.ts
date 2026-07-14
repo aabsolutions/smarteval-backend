@@ -13,7 +13,7 @@ export declare class AssessmentsService {
     private studentsService;
     constructor(assessmentModel: Model<AssessmentDocument>, lateRequestModel: Model<LateRequestDocument>, questionModel: Model<QuestionDocument>, notificationsService: NotificationsService, studentsService: StudentsService);
     create(createDto: CreateAssessmentDto, teacherId: string): Promise<Assessment>;
-    findAllByTeacher(teacherId: string): Promise<any[]>;
+    findAllByTeacher(teacherId: string, isArchived?: boolean): Promise<any[]>;
     findAvailableForStudent(studentGroupId: string): Promise<any[]>;
     findAvailableForStudentUser(username: string, userId: string): Promise<any[]>;
     getFlashcards(assessmentId: string, username: string, userId: string): Promise<any>;
@@ -22,4 +22,5 @@ export declare class AssessmentsService {
     allowLateStudent(assessmentId: string, studentId: string): Promise<void>;
     removeLateStudent(assessmentId: string, studentId: string): Promise<void>;
     delete(id: string, teacherId: string): Promise<any>;
+    toggleArchive(id: string, teacherId: string): Promise<Assessment>;
 }

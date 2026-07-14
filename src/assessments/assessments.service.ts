@@ -49,8 +49,9 @@ export class AssessmentsService {
     return created;
   }
 
-  async findAllByTeacher(teacherId: string): Promise<any[]> {
-    return this.assessmentModel.find({ teacherId: new Types.ObjectId(teacherId) })
+  async findAllByTeacher(teacherId: string, isArchived: boolean = false): Promise<any[]> {
+    const archiveCondition = isArchived ? true : { $ne: true };
+    return this.assessmentModel.find({ teacherId: new Types.ObjectId(teacherId), isArchived: archiveCondition })
       .populate('topicId', 'name')
       .populate('groupIds', 'name')
       .lean()
@@ -58,7 +59,7 @@ export class AssessmentsService {
   }
 
   async findAvailableForStudent(studentGroupId: string): Promise<any[]> {
-    return this.assessmentModel.find({ groupIds: new Types.ObjectId(studentGroupId) })
+    return this.assessmentModel.find({ groupIds: new Types.ObjectId(studentGroupId), isArchived: { $ne: true } })
       .populate('topicId', 'name')
       .populate('teacherId', 'name')
       .lean()
@@ -72,7 +73,7 @@ export class AssessmentsService {
     }
     const groupId = (student.groupId as any)._id || student.groupId;
     
-    const assessments = await this.assessmentModel.find({ groupIds: new Types.ObjectId(groupId) })
+    const assessments = await this.assessmentModel.find({ groupIds: new Types.ObjectId(groupId), isArchived: { $ne: true } })
       .populate('topicId', 'name')
       .populate('teacherId', 'name')
       .lean()
@@ -182,5 +183,12 @@ export class AssessmentsService {
     const deleted = await this.assessmentModel.findOneAndDelete({ _id: id, teacherId: new Types.ObjectId(teacherId) });
     if (!deleted) throw new NotFoundException('Assessment not found or unauthorized');
     return deleted;
+  }
+
+  async toggleArchive(id: string, teacherId: string): Promise<Assessment> {
+    const assessment = await this.assessmentModel.findOne({ _id: id, teacherId: new Types.ObjectId(teacherId) });
+    if (!assessment) throw new NotFoundException('Assessment not found or unauthorized');
+    assessment.isArchived = !assessment.isArchived;
+    return assessment.save();
   }
 }

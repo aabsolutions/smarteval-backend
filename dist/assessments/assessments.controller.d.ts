@@ -5,7 +5,7 @@ export declare class AssessmentsController {
     private readonly assessmentsService;
     constructor(assessmentsService: AssessmentsService);
     create(createDto: CreateAssessmentDto, req: any): Promise<import("./assessment.schema").Assessment>;
-    findAllByTeacher(req: any): Promise<any[]>;
+    findAllByTeacher(req: any, archived: string): Promise<any[]>;
     findAvailableForStudent(req: any): Promise<any[]>;
     debugStudent(req: any): Promise<{
         now: string;
@@ -20,4 +20,5 @@ export declare class AssessmentsController {
     findOne(id: string): Promise<any>;
     update(id: string, updateDto: UpdateAssessmentDto, req: any): Promise<import("./assessment.schema").Assessment>;
     remove(id: string, req: any): Promise<any>;
+    toggleArchive(id: string, req: any): Promise<import("./assessment.schema").Assessment>;
 }

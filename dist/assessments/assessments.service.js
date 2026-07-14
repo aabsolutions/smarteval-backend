@@ -50,15 +50,16 @@ let AssessmentsService = class AssessmentsService {
         }
         return created;
     }
-    async findAllByTeacher(teacherId) {
-        return this.assessmentModel.find({ teacherId: new mongoose_2.Types.ObjectId(teacherId) })
+    async findAllByTeacher(teacherId, isArchived = false) {
+        const archiveCondition = isArchived ? true : { $ne: true };
+        return this.assessmentModel.find({ teacherId: new mongoose_2.Types.ObjectId(teacherId), isArchived: archiveCondition })
             .populate('topicId', 'name')
             .populate('groupIds', 'name')
             .lean()
             .exec();
     }
     async findAvailableForStudent(studentGroupId) {
-        return this.assessmentModel.find({ groupIds: new mongoose_2.Types.ObjectId(studentGroupId) })
+        return this.assessmentModel.find({ groupIds: new mongoose_2.Types.ObjectId(studentGroupId), isArchived: { $ne: true } })
             .populate('topicId', 'name')
             .populate('teacherId', 'name')
             .lean()
@@ -70,7 +71,7 @@ let AssessmentsService = class AssessmentsService {
             return [];
         }
         const groupId = student.groupId._id || student.groupId;
-        const assessments = await this.assessmentModel.find({ groupIds: new mongoose_2.Types.ObjectId(groupId) })
+        const assessments = await this.assessmentModel.find({ groupIds: new mongoose_2.Types.ObjectId(groupId), isArchived: { $ne: true } })
             .populate('topicId', 'name')
             .populate('teacherId', 'name')
             .lean()
@@ -156,6 +157,13 @@ let AssessmentsService = class AssessmentsService {
         if (!deleted)
             throw new common_1.NotFoundException('Assessment not found or unauthorized');
         return deleted;
+    }
+    async toggleArchive(id, teacherId) {
+        const assessment = await this.assessmentModel.findOne({ _id: id, teacherId: new mongoose_2.Types.ObjectId(teacherId) });
+        if (!assessment)
+            throw new common_1.NotFoundException('Assessment not found or unauthorized');
+        assessment.isArchived = !assessment.isArchived;
+        return assessment.save();
     }
 };
 exports.AssessmentsService = AssessmentsService;

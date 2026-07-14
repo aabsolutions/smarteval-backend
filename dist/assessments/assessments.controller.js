@@ -27,8 +27,8 @@ let AssessmentsController = class AssessmentsController {
     create(createDto, req) {
         return this.assessmentsService.create(createDto, req.user.userId);
     }
-    async findAllByTeacher(req) {
-        return this.assessmentsService.findAllByTeacher(req.user.userId);
+    async findAllByTeacher(req, archived) {
+        return this.assessmentsService.findAllByTeacher(req.user.userId, archived === 'true');
     }
     findAvailableForStudent(req) {
         return this.assessmentsService.findAvailableForStudentUser(req.user.username, req.user.userId || req.user.sub);
@@ -57,6 +57,9 @@ let AssessmentsController = class AssessmentsController {
     remove(id, req) {
         return this.assessmentsService.delete(id, req.user.userId);
     }
+    toggleArchive(id, req) {
+        return this.assessmentsService.toggleArchive(id, req.user.userId);
+    }
 };
 exports.AssessmentsController = AssessmentsController;
 __decorate([
@@ -72,8 +75,9 @@ __decorate([
     (0, common_1.Get)('teacher'),
     (0, roles_decorator_1.Roles)('TEACHER', 'ADMIN', 'SUPERADMIN'),
     __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Query)('archived')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
+    __metadata("design:paramtypes", [Object, String]),
     __metadata("design:returntype", Promise)
 ], AssessmentsController.prototype, "findAllByTeacher", null);
 __decorate([
@@ -128,6 +132,15 @@ __decorate([
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", void 0)
 ], AssessmentsController.prototype, "remove", null);
+__decorate([
+    (0, common_1.Post)(':id/archive'),
+    (0, roles_decorator_1.Roles)('TEACHER', 'ADMIN', 'SUPERADMIN'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", void 0)
+], AssessmentsController.prototype, "toggleArchive", null);
 exports.AssessmentsController = AssessmentsController = __decorate([
     (0, common_1.Controller)('assessments'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),

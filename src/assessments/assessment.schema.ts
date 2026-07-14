@@ -58,6 +58,9 @@ export class Assessment {
 
   @Prop({ default: 0 })
   flashcardsTimeLimitMinutes: number;
+
+  @Prop({ default: false })
+  isArchived: boolean;
 }
 
 export const AssessmentSchema = SchemaFactory.createForClass(Assessment);

@@ -284,7 +284,7 @@ let AssessmentAttemptsService = class AssessmentAttemptsService {
             }
             else if (q.type === 'fill-blank') {
                 if (sAns.length > 0) {
-                    const normalizeStr = (str) => (str || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+                    const normalizeStr = (str) => (str || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim().replace(/\s+/g, ' ');
                     const userAns = normalizeStr(sAns[0]);
                     isCorrect = q.correctAnswers.some(c => normalizeStr(c) === userAns);
                 }
@@ -351,7 +351,7 @@ let AssessmentAttemptsService = class AssessmentAttemptsService {
             }
             else if (q.type === 'fill-blank') {
                 if (sAns.length > 0) {
-                    const normalizeStr = (str) => (str || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+                    const normalizeStr = (str) => (str || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim().replace(/\s+/g, ' ');
                     const userAns = normalizeStr(sAns[0]);
                     isCorrect = q.correctAnswers.some(c => normalizeStr(c) === userAns);
                 }

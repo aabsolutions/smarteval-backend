@@ -19,8 +19,8 @@ export class AssessmentsController {
 
   @Get('teacher')
   @Roles('TEACHER', 'ADMIN', 'SUPERADMIN')
-  async findAllByTeacher(@Request() req) {
-    return this.assessmentsService.findAllByTeacher(req.user.userId);
+  async findAllByTeacher(@Request() req, @Query('archived') archived: string) {
+    return this.assessmentsService.findAllByTeacher(req.user.userId, archived === 'true');
   }
 
   @Get('student')
@@ -66,5 +66,11 @@ export class AssessmentsController {
   @Roles('TEACHER', 'ADMIN', 'SUPERADMIN')
   remove(@Param('id') id: string, @Request() req) {
     return this.assessmentsService.delete(id, req.user.userId);
+  }
+
+  @Post(':id/archive')
+  @Roles('TEACHER', 'ADMIN', 'SUPERADMIN')
+  toggleArchive(@Param('id') id: string, @Request() req) {
+    return this.assessmentsService.toggleArchive(id, req.user.userId);
   }
 }
