@@ -4,6 +4,7 @@ import { Model, Connection } from 'mongoose';
 import * as bcrypt from 'bcryptjs';
 import { User } from './schemas/user.schema';
 import { NotificationsService } from '../notifications/notifications.service';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
 
 @Injectable()
 export class UsersService implements OnModuleInit {
@@ -11,6 +12,7 @@ export class UsersService implements OnModuleInit {
     @InjectModel(User.name) private readonly userModel: Model<User>,
     @InjectConnection() private readonly connection: Connection,
     private readonly notificationsService: NotificationsService,
+    private readonly cloudinaryService: CloudinaryService
   ) {}
 
   async onModuleInit() {
@@ -23,6 +25,45 @@ export class UsersService implements OnModuleInit {
 
   async findById(id: string): Promise<User | null> {
     return this.userModel.findById(id).select('-password').exec();
+  }
+
+  async getUserInstitutionLogo(user: User): Promise<string | null> {
+    const role = user.roles?.[0]?.name;
+    if (!role) return null;
+
+    try {
+      if (role === 'STUDENT') {
+        const StudentModel = this.connection.model('Student');
+        const GroupModel = this.connection.model('Group');
+        const InstitutionModel = this.connection.model('Institution');
+
+        const student = await StudentModel.findOne({ identifier: user.username }).exec();
+        if (student && student.groupId) {
+          const group = await GroupModel.findById(student.groupId).exec();
+          if (group && group.institution) {
+            const institution = await InstitutionModel.findById(group.institution).exec();
+            return institution?.logoUrl || null;
+          }
+        }
+      } else if (role === 'TEACHER') {
+        const TeacherModel = this.connection.model('Teacher');
+        const GroupModel = this.connection.model('Group');
+        const InstitutionModel = this.connection.model('Institution');
+
+        const teacher = await TeacherModel.findOne({ identifier: user.username }).exec();
+        if (teacher) {
+          // Find any group assigned to this teacher
+          const group = await GroupModel.findOne({ teacher: teacher._id }).exec();
+          if (group && group.institution) {
+            const institution = await InstitutionModel.findById(group.institution).exec();
+            return institution?.logoUrl || null;
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching institution logo:', error);
+    }
+    return null;
   }
 
   async findAll(allowedRoles: string[], page: number = 1, limit: number = 10, search?: string): Promise<{ data: User[], total: number }> {
@@ -47,7 +88,12 @@ export class UsersService implements OnModuleInit {
     return { data, total };
   }
 
-  async update(id: string, updateData: any): Promise<User | null> {
+  async update(id: string, updateData: any, file?: Express.Multer.File): Promise<User | null> {
+    if (file) {
+      const uploadResult = await this.cloudinaryService.uploadImage(file, 'smarteval/users');
+      updateData.avatar = uploadResult.secure_url;
+    }
+    
     if (updateData.password) {
       updateData.password = await bcrypt.hash(updateData.password, 10);
     }

@@ -14,6 +14,7 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UsersController = void 0;
 const common_1 = require("@nestjs/common");
+const platform_express_1 = require("@nestjs/platform-express");
 const users_service_1 = require("./users.service");
 const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
 const roles_guard_1 = require("../auth/guards/roles.guard");
@@ -67,12 +68,12 @@ let UsersController = class UsersController {
         this.checkPermissions(req.user.roles[0].name, user.roles[0].name);
         return this.usersService.resetPassword(id);
     }
-    async updateProfile(updateData, req) {
+    async updateProfile(updateData, req, file) {
         const userId = req.user.userId || req.user.sub || req.user.id || req.user._id;
         delete updateData.roles;
         delete updateData.cedula;
         delete updateData.password;
-        return this.usersService.update(userId, updateData);
+        return this.usersService.update(userId, updateData, file);
     }
     async changePassword(passData, req) {
         const userId = req.user.userId || req.user.sub || req.user.id || req.user._id;
@@ -151,10 +152,12 @@ __decorate([
 ], UsersController.prototype, "resetPassword", null);
 __decorate([
     (0, common_1.Put)('me/profile'),
+    (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('avatar')),
     __param(0, (0, common_1.Body)()),
     __param(1, (0, common_1.Request)()),
+    __param(2, (0, common_1.UploadedFile)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:paramtypes", [Object, Object, Object]),
     __metadata("design:returntype", Promise)
 ], UsersController.prototype, "updateProfile", null);
 __decorate([

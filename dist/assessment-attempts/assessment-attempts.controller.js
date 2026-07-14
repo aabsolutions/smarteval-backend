@@ -28,6 +28,15 @@ let AssessmentAttemptsController = class AssessmentAttemptsController {
     submitAttempt(attemptId, answers, antiCheatLog, isTimeout, req) {
         return this.attemptsService.submitAttempt(attemptId, req.user.userId || req.user.sub, answers, antiCheatLog, isTimeout);
     }
+    generatePaperAttempts(assessmentId, studentIds) {
+        return this.attemptsService.generatePaperAttempts(assessmentId, studentIds);
+    }
+    getEligibleStudents(assessmentId) {
+        return this.attemptsService.getEligibleStudentsForPaper(assessmentId);
+    }
+    submitPaperAttempt(attemptId, studentId, answers) {
+        return this.attemptsService.submitPaperAttempt(attemptId, studentId, answers);
+    }
     getStudentHistory(req) {
         return this.attemptsService.getStudentHistory(req.user.userId || req.user.sub);
     }
@@ -36,6 +45,9 @@ let AssessmentAttemptsController = class AssessmentAttemptsController {
     }
     getAttemptDetails(attemptId, req) {
         return this.attemptsService.getAttemptDetails(attemptId, req.user.userId || req.user.sub);
+    }
+    getPaperAttempt(attemptId) {
+        return this.attemptsService.getPaperAttemptById(attemptId);
     }
     archiveAttempt(id) {
         return this.attemptsService.archiveAttempt(id);
@@ -67,6 +79,33 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], AssessmentAttemptsController.prototype, "submitAttempt", null);
 __decorate([
+    (0, common_1.Post)('generate-paper'),
+    (0, roles_decorator_1.Roles)('TEACHER', 'ADMIN'),
+    __param(0, (0, common_1.Body)('assessmentId')),
+    __param(1, (0, common_1.Body)('studentIds')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Array]),
+    __metadata("design:returntype", void 0)
+], AssessmentAttemptsController.prototype, "generatePaperAttempts", null);
+__decorate([
+    (0, common_1.Get)('eligible-students/:assessmentId'),
+    (0, roles_decorator_1.Roles)('TEACHER', 'ADMIN'),
+    __param(0, (0, common_1.Param)('assessmentId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], AssessmentAttemptsController.prototype, "getEligibleStudents", null);
+__decorate([
+    (0, common_1.Post)('submit-paper/:attemptId'),
+    (0, roles_decorator_1.Roles)('TEACHER', 'ADMIN', 'STUDENT'),
+    __param(0, (0, common_1.Param)('attemptId')),
+    __param(1, (0, common_1.Body)('studentId')),
+    __param(2, (0, common_1.Body)('answers')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String, Array]),
+    __metadata("design:returntype", void 0)
+], AssessmentAttemptsController.prototype, "submitPaperAttempt", null);
+__decorate([
     (0, common_1.Get)('student/history'),
     (0, roles_decorator_1.Roles)('STUDENT'),
     __param(0, (0, common_1.Request)()),
@@ -92,6 +131,14 @@ __decorate([
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", void 0)
 ], AssessmentAttemptsController.prototype, "getAttemptDetails", null);
+__decorate([
+    (0, common_1.Get)('paper-attempt/:attemptId'),
+    (0, roles_decorator_1.Roles)('TEACHER', 'ADMIN', 'STUDENT'),
+    __param(0, (0, common_1.Param)('attemptId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], AssessmentAttemptsController.prototype, "getPaperAttempt", null);
 __decorate([
     (0, common_1.Patch)(':id/archive'),
     (0, roles_decorator_1.Roles)('TEACHER', 'ADMIN'),

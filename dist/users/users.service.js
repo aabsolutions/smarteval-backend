@@ -19,11 +19,13 @@ const mongoose_2 = require("mongoose");
 const bcrypt = require("bcryptjs");
 const user_schema_1 = require("./schemas/user.schema");
 const notifications_service_1 = require("../notifications/notifications.service");
+const cloudinary_service_1 = require("../cloudinary/cloudinary.service");
 let UsersService = class UsersService {
-    constructor(userModel, connection, notificationsService) {
+    constructor(userModel, connection, notificationsService, cloudinaryService) {
         this.userModel = userModel;
         this.connection = connection;
         this.notificationsService = notificationsService;
+        this.cloudinaryService = cloudinaryService;
     }
     async onModuleInit() {
         await this.seedUsers();
@@ -33,6 +35,43 @@ let UsersService = class UsersService {
     }
     async findById(id) {
         return this.userModel.findById(id).select('-password').exec();
+    }
+    async getUserInstitutionLogo(user) {
+        const role = user.roles?.[0]?.name;
+        if (!role)
+            return null;
+        try {
+            if (role === 'STUDENT') {
+                const StudentModel = this.connection.model('Student');
+                const GroupModel = this.connection.model('Group');
+                const InstitutionModel = this.connection.model('Institution');
+                const student = await StudentModel.findOne({ identifier: user.username }).exec();
+                if (student && student.groupId) {
+                    const group = await GroupModel.findById(student.groupId).exec();
+                    if (group && group.institution) {
+                        const institution = await InstitutionModel.findById(group.institution).exec();
+                        return institution?.logoUrl || null;
+                    }
+                }
+            }
+            else if (role === 'TEACHER') {
+                const TeacherModel = this.connection.model('Teacher');
+                const GroupModel = this.connection.model('Group');
+                const InstitutionModel = this.connection.model('Institution');
+                const teacher = await TeacherModel.findOne({ identifier: user.username }).exec();
+                if (teacher) {
+                    const group = await GroupModel.findOne({ teacher: teacher._id }).exec();
+                    if (group && group.institution) {
+                        const institution = await InstitutionModel.findById(group.institution).exec();
+                        return institution?.logoUrl || null;
+                    }
+                }
+            }
+        }
+        catch (error) {
+            console.error('Error fetching institution logo:', error);
+        }
+        return null;
     }
     async findAll(allowedRoles, page = 1, limit = 10, search) {
         const query = { 'roles.name': { $in: allowedRoles } };
@@ -51,7 +90,11 @@ let UsersService = class UsersService {
         ]);
         return { data, total };
     }
-    async update(id, updateData) {
+    async update(id, updateData, file) {
+        if (file) {
+            const uploadResult = await this.cloudinaryService.uploadImage(file, 'smarteval/users');
+            updateData.avatar = uploadResult.secure_url;
+        }
         if (updateData.password) {
             updateData.password = await bcrypt.hash(updateData.password, 10);
         }
@@ -182,6 +225,7 @@ exports.UsersService = UsersService = __decorate([
     __param(1, (0, mongoose_1.InjectConnection)()),
     __metadata("design:paramtypes", [mongoose_2.Model,
         mongoose_2.Connection,
-        notifications_service_1.NotificationsService])
+        notifications_service_1.NotificationsService,
+        cloudinary_service_1.CloudinaryService])
 ], UsersService);
 //# sourceMappingURL=users.service.js.map

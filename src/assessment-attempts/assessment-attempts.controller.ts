@@ -33,6 +33,31 @@ export class AssessmentAttemptsController {
     );
   }
 
+  @Post('generate-paper')
+  @Roles('TEACHER', 'ADMIN')
+  generatePaperAttempts(
+    @Body('assessmentId') assessmentId: string,
+    @Body('studentIds') studentIds: string[]
+  ) {
+    return this.attemptsService.generatePaperAttempts(assessmentId, studentIds);
+  }
+
+  @Get('eligible-students/:assessmentId')
+  @Roles('TEACHER', 'ADMIN')
+  getEligibleStudents(@Param('assessmentId') assessmentId: string) {
+    return this.attemptsService.getEligibleStudentsForPaper(assessmentId);
+  }
+
+  @Post('submit-paper/:attemptId')
+  @Roles('TEACHER', 'ADMIN', 'STUDENT')
+  submitPaperAttempt(
+    @Param('attemptId') attemptId: string,
+    @Body('studentId') studentId: string,
+    @Body('answers') answers: { questionId: string, answers: string[] }[]
+  ) {
+    return this.attemptsService.submitPaperAttempt(attemptId, studentId, answers);
+  }
+
   @Get('student/history')
   @Roles('STUDENT')
   getStudentHistory(@Request() req) {
@@ -49,6 +74,12 @@ export class AssessmentAttemptsController {
   @Roles('STUDENT')
   getAttemptDetails(@Param('attemptId') attemptId: string, @Request() req) {
     return this.attemptsService.getAttemptDetails(attemptId, req.user.userId || req.user.sub);
+  }
+
+  @Get('paper-attempt/:attemptId')
+  @Roles('TEACHER', 'ADMIN', 'STUDENT')
+  getPaperAttempt(@Param('attemptId') attemptId: string) {
+    return this.attemptsService.getPaperAttemptById(attemptId);
   }
 
   @Patch(':id/archive')

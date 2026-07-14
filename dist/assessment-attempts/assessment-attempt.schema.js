@@ -9,14 +9,20 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.AssessmentAttemptSchema = exports.AssessmentAttempt = exports.AttemptStatus = void 0;
+exports.AssessmentAttemptSchema = exports.AssessmentAttempt = exports.AttemptSource = exports.AttemptStatus = void 0;
 const mongoose_1 = require("@nestjs/mongoose");
 const mongoose_2 = require("mongoose");
 var AttemptStatus;
 (function (AttemptStatus) {
     AttemptStatus["IN_PROGRESS"] = "in-progress";
     AttemptStatus["COMPLETED"] = "completed";
+    AttemptStatus["PAPER_PENDING"] = "paper-pending";
 })(AttemptStatus || (exports.AttemptStatus = AttemptStatus = {}));
+var AttemptSource;
+(function (AttemptSource) {
+    AttemptSource["ONLINE"] = "online";
+    AttemptSource["PAPER"] = "paper";
+})(AttemptSource || (exports.AttemptSource = AttemptSource = {}));
 let SnapshotQuestion = class SnapshotQuestion {
 };
 __decorate([
@@ -122,6 +128,10 @@ __decorate([
     (0, mongoose_1.Prop)({ default: false }),
     __metadata("design:type", Boolean)
 ], AssessmentAttempt.prototype, "isArchived", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ required: true, enum: AttemptSource, default: AttemptSource.ONLINE }),
+    __metadata("design:type", String)
+], AssessmentAttempt.prototype, "source", void 0);
 exports.AssessmentAttempt = AssessmentAttempt = __decorate([
     (0, mongoose_1.Schema)({ timestamps: true })
 ], AssessmentAttempt);

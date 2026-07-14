@@ -46,6 +46,7 @@ let GroupsService = class GroupsService {
             .populate('createdBy', 'name email')
             .populate('teacher', 'name email')
             .populate('institution', 'name')
+            .populate('students')
             .exec();
     }
     async findOne(id) {
@@ -53,6 +54,7 @@ let GroupsService = class GroupsService {
             .populate('createdBy', 'name email')
             .populate('teacher', 'name email')
             .populate('institution', 'name')
+            .populate('students')
             .exec();
         if (!group) {
             throw new common_1.NotFoundException(`Grupo con ID ${id} no encontrado`);

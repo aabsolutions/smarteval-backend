@@ -47,4 +47,11 @@ exports.Group = Group = __decorate([
     (0, mongoose_1.Schema)({ timestamps: true })
 ], Group);
 exports.GroupSchema = mongoose_1.SchemaFactory.createForClass(Group);
+exports.GroupSchema.virtual('students', {
+    ref: 'Student',
+    localField: '_id',
+    foreignField: 'groupId',
+});
+exports.GroupSchema.set('toJSON', { virtuals: true });
+exports.GroupSchema.set('toObject', { virtuals: true });
 //# sourceMappingURL=group.schema.js.map

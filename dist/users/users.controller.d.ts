@@ -13,7 +13,7 @@ export declare class UsersController {
     update(id: string, updateUserDto: UpdateUserDto, req: any): Promise<import("./schemas/user.schema").User>;
     remove(id: string, req: any): Promise<import("./schemas/user.schema").User>;
     resetPassword(id: string, req: any): Promise<any>;
-    updateProfile(updateData: any, req: any): Promise<import("./schemas/user.schema").User>;
+    updateProfile(updateData: any, req: any, file?: Express.Multer.File): Promise<import("./schemas/user.schema").User>;
     changePassword(passData: any, req: any): Promise<any>;
     private checkPermissions;
 }

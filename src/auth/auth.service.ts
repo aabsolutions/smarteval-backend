@@ -51,11 +51,16 @@ export class AuthService {
       },
     );
 
-    const userObj = user.toObject();
+    const userObj: any = user.toObject();
     const id = userObj._id.toString();
     delete userObj.password;
     delete userObj._id;
     delete userObj.__v;
+
+    const logoUrl = await this.usersService.getUserInstitutionLogo(user);
+    if (logoUrl) {
+      userObj.institutionLogo = logoUrl;
+    }
 
     return {
       user: { id, ...userObj },
@@ -104,11 +109,17 @@ export class AuthService {
     if (!user) {
       throw new UnauthorizedException('Usuario no encontrado');
     }
-    const userObj = user.toObject();
+    const userObj: any = user.toObject();
     const id = userObj._id.toString();
     delete userObj.password;
     delete userObj._id;
     delete userObj.__v;
+    
+    const logoUrl = await this.usersService.getUserInstitutionLogo(user);
+    if (logoUrl) {
+      userObj.institutionLogo = logoUrl;
+    }
+
     return { id, ...userObj };
   }
 }

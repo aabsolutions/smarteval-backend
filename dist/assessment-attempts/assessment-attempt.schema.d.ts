@@ -2,7 +2,12 @@ import { Document, Types } from 'mongoose';
 export type AssessmentAttemptDocument = AssessmentAttempt & Document;
 export declare enum AttemptStatus {
     IN_PROGRESS = "in-progress",
-    COMPLETED = "completed"
+    COMPLETED = "completed",
+    PAPER_PENDING = "paper-pending"
+}
+export declare enum AttemptSource {
+    ONLINE = "online",
+    PAPER = "paper"
 }
 declare class SnapshotQuestion {
     questionId: string;
@@ -37,6 +42,7 @@ export declare class AssessmentAttempt {
     isTimeout: boolean;
     outOfTime: boolean;
     isArchived: boolean;
+    source: AttemptSource;
 }
 export declare const AssessmentAttemptSchema: import("mongoose").Schema<AssessmentAttempt, import("mongoose").Model<AssessmentAttempt, any, any, any, Document<unknown, any, AssessmentAttempt, any, {}> & AssessmentAttempt & {
     _id: Types.ObjectId;

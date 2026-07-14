@@ -38,6 +38,7 @@ export class GroupsService {
       .populate('createdBy', 'name email')
       .populate('teacher', 'name email')
       .populate('institution', 'name')
+      .populate('students')
       .exec();
   }
 
@@ -46,6 +47,7 @@ export class GroupsService {
       .populate('createdBy', 'name email')
       .populate('teacher', 'name email')
       .populate('institution', 'name')
+      .populate('students')
       .exec();
     if (!group) {
       throw new NotFoundException(`Grupo con ID ${id} no encontrado`);

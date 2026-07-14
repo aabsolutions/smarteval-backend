@@ -32,7 +32,7 @@ let ReportsService = class ReportsService {
             throw new common_1.NotFoundException('Examen no encontrado');
         const attemptsRaw = await this.attemptModel.find({
             assessmentId: new mongoose_2.Types.ObjectId(assessmentId),
-            status: assessment_attempt_schema_1.AttemptStatus.COMPLETED,
+            status: { $in: [assessment_attempt_schema_1.AttemptStatus.COMPLETED, assessment_attempt_schema_1.AttemptStatus.PAPER_PENDING] },
             isArchived: { $ne: true }
         })
             .populate('studentId', 'name username email')
@@ -114,17 +114,20 @@ let ReportsService = class ReportsService {
         const formattedAttempts = attempts
             .filter(attempt => attempt.studentId != null)
             .map(attempt => {
-            const durationMinutes = Math.round((attempt.endTime.getTime() - attempt.startTime.getTime()) / 60000);
+            const hasFinished = !!attempt.endTime;
+            const durationMinutes = hasFinished ? Math.round((attempt.endTime.getTime() - attempt.startTime.getTime()) / 60000) : 0;
             const percentage = attempt.maxScore > 0 ? (attempt.score / attempt.maxScore) * 100 : 0;
             return {
                 _id: attempt._id,
                 student: attempt.studentId,
-                score: attempt.score,
+                score: attempt.score || 0,
                 maxScore: attempt.maxScore,
                 percentage: Math.round(percentage * 10) / 10,
                 durationMinutes,
                 startTime: attempt.startTime,
-                endTime: attempt.endTime,
+                endTime: attempt.endTime || null,
+                status: attempt.status,
+                source: attempt.source,
                 antiCheatLog: attempt.antiCheatLog,
                 isTimeout: attempt.isTimeout,
                 outOfTime: attempt.outOfTime,

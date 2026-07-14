@@ -11,8 +11,14 @@ export class Assessment {
   @Prop()
   description: string;
 
-  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'Topic', required: true })
-  topicId: Types.ObjectId;
+  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'Topic', required: false })
+  topicId?: Types.ObjectId;
+
+  @Prop({ default: false })
+  isCumulative: boolean;
+
+  @Prop({ type: [{ type: MongooseSchema.Types.ObjectId, ref: 'Question' }], default: [] })
+  cumulativeQuestionIds: Types.ObjectId[];
 
   @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: true })
   teacherId: Types.ObjectId;

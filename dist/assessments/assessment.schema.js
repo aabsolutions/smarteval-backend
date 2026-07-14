@@ -24,9 +24,17 @@ __decorate([
     __metadata("design:type", String)
 ], Assessment.prototype, "description", void 0);
 __decorate([
-    (0, mongoose_1.Prop)({ type: mongoose_2.Schema.Types.ObjectId, ref: 'Topic', required: true }),
+    (0, mongoose_1.Prop)({ type: mongoose_2.Schema.Types.ObjectId, ref: 'Topic', required: false }),
     __metadata("design:type", mongoose_2.Types.ObjectId)
 ], Assessment.prototype, "topicId", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: false }),
+    __metadata("design:type", Boolean)
+], Assessment.prototype, "isCumulative", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: [{ type: mongoose_2.Schema.Types.ObjectId, ref: 'Question' }], default: [] }),
+    __metadata("design:type", Array)
+], Assessment.prototype, "cumulativeQuestionIds", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ type: mongoose_2.Schema.Types.ObjectId, ref: 'User', required: true }),
     __metadata("design:type", mongoose_2.Types.ObjectId)

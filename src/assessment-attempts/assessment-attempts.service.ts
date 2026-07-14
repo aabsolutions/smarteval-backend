@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
-import { AssessmentAttempt, AssessmentAttemptDocument, AttemptStatus } from './assessment-attempt.schema';
+import { InjectModel, InjectConnection } from '@nestjs/mongoose';
+import { Model, Types, Connection } from 'mongoose';
+import { AssessmentAttempt, AssessmentAttemptDocument, AttemptStatus, AttemptSource } from './assessment-attempt.schema';
 import { Assessment, AssessmentDocument } from '../assessments/assessment.schema';
 import { Question, QuestionDocument } from '../questions/question.schema';
 import { LateRequest, LateRequestDocument, LateRequestStatus } from '../late-requests/late-request.schema';
@@ -13,6 +13,7 @@ export class AssessmentAttemptsService {
     @InjectModel(Assessment.name) private assessmentModel: Model<AssessmentDocument>,
     @InjectModel(Question.name) private questionModel: Model<QuestionDocument>,
     @InjectModel(LateRequest.name) private lateRequestModel: Model<LateRequestDocument>,
+    @InjectConnection() private readonly connection: Connection,
   ) {}
 
   private sanitizeAttempt(attempt: any): any {
@@ -61,6 +62,17 @@ export class AssessmentAttemptsService {
       return inProgress;
     }
 
+    const paperPending = await this.attemptModel.findOne({
+      assessmentId: new Types.ObjectId(assessmentId),
+      studentId: new Types.ObjectId(studentId),
+      status: AttemptStatus.PAPER_PENDING,
+      source: AttemptSource.PAPER
+    });
+
+    if (paperPending) {
+      throw new BadRequestException('Tu evaluación fue asignada en formato papel.');
+    }
+
     const previousAttempts = await this.attemptModel.countDocuments({
       assessmentId: new Types.ObjectId(assessmentId),
       studentId: new Types.ObjectId(studentId),
@@ -71,15 +83,24 @@ export class AssessmentAttemptsService {
       throw new BadRequestException(`Ya has alcanzado el máximo de intentos (${assessment.maxAttempts})`);
     }
 
-    const pipeline = [
-      { $match: { topicId: assessment.topicId } },
-      { $sample: { size: assessment.totalQuestionsToPull } }
-    ];
+    let randomQuestions;
+    if (assessment.isCumulative && assessment.cumulativeQuestionIds && assessment.cumulativeQuestionIds.length > 0) {
+      randomQuestions = await this.questionModel.find({
+        _id: { $in: assessment.cumulativeQuestionIds }
+      }).exec();
+      
+      // Shuffle the selected questions for anti-cheat randomness
+      randomQuestions.sort(() => Math.random() - 0.5);
+    } else {
+      const pipeline = [
+        { $match: { topicId: assessment.topicId } },
+        { $sample: { size: assessment.totalQuestionsToPull } }
+      ];
+      randomQuestions = await this.questionModel.aggregate(pipeline);
+    }
 
-    const randomQuestions = await this.questionModel.aggregate(pipeline);
-
-    if (randomQuestions.length === 0) {
-      throw new BadRequestException('No hay preguntas disponibles en este tema para armar el examen');
+    if (!randomQuestions || randomQuestions.length === 0) {
+      throw new BadRequestException('No hay preguntas disponibles para armar este examen');
     }
 
     let maxScore = 0;
@@ -130,6 +151,203 @@ export class AssessmentAttemptsService {
 
     const savedAttempt = await newAttempt.save();
     return this.sanitizeAttempt(savedAttempt);
+  }
+
+  async getEligibleStudentsForPaper(assessmentId: string): Promise<any[]> {
+    const assessment = await this.assessmentModel.findById(assessmentId);
+    if (!assessment) throw new NotFoundException('Assessment not found');
+
+    const StudentModel = this.connection.model('Student');
+    const UserModel = this.connection.model('User');
+    
+    const students = await StudentModel.find({ groupId: { $in: assessment.groupIds } }).exec();
+    const identifiers = students.map((s: any) => s.identifier);
+    const users = await UserModel.find({ username: { $in: identifiers } }).exec();
+    
+    const userIds = users.map((u: any) => u._id);
+    const existingAttempts = await this.attemptModel.find({
+      assessmentId: new Types.ObjectId(assessmentId),
+      studentId: { $in: userIds },
+      isArchived: { $ne: true }
+    }).select('studentId');
+
+    const existingStudentIds = existingAttempts.map(a => a.studentId.toString());
+
+    const eligibleUsers = users.filter((u: any) => !existingStudentIds.includes(u._id.toString()));
+
+    const result = eligibleUsers.map((u: any) => ({
+      _id: u._id,
+      name: u.name,
+      username: u.username,
+      email: u.email
+    }));
+
+    result.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+
+    return result;
+  }
+
+  async generatePaperAttempts(assessmentId: string, studentIds: string[]): Promise<AssessmentAttempt[]> {
+    const assessment = await this.assessmentModel.findById(assessmentId);
+    if (!assessment) throw new NotFoundException('Assessment not found');
+
+    if (!studentIds || studentIds.length === 0) {
+      const StudentModel = this.connection.model('Student');
+      const UserModel = this.connection.model('User');
+      
+      const students = await StudentModel.find({ groupId: { $in: assessment.groupIds } }).exec();
+      const identifiers = students.map((s: any) => s.identifier);
+      const users = await UserModel.find({ username: { $in: identifiers } }).exec();
+      studentIds = users.map((u: any) => u._id.toString());
+    }
+
+    const createdAttempts = [];
+    for (const studentId of studentIds) {
+      // Check if attempt exists
+      const existing = await this.attemptModel.findOne({
+        assessmentId: new Types.ObjectId(assessmentId),
+        studentId: new Types.ObjectId(studentId),
+        isArchived: { $ne: true }
+      });
+      if (existing) continue; // Skip if student already has an attempt
+
+      let randomQuestions;
+      if (assessment.isCumulative && assessment.cumulativeQuestionIds && assessment.cumulativeQuestionIds.length > 0) {
+        randomQuestions = await this.questionModel.find({
+          _id: { $in: assessment.cumulativeQuestionIds }
+        }).exec();
+        randomQuestions.sort(() => Math.random() - 0.5);
+      } else {
+        const pipeline = [
+          { $match: { topicId: assessment.topicId } },
+          { $sample: { size: assessment.totalQuestionsToPull } }
+        ];
+        randomQuestions = await this.questionModel.aggregate(pipeline);
+      }
+      
+      if (!randomQuestions || randomQuestions.length === 0) continue;
+
+      let maxScore = 0;
+      const snapshotQuestions = randomQuestions.map(q => {
+        maxScore += q.points || 1;
+        let options = q.options || [];
+        let correctAnswers = q.correctAnswers || [];
+
+        if (assessment.shuffleOptions && options.length > 0) {
+          if (q.type !== 'matching') {
+            options = [...options].sort(() => Math.random() - 0.5);
+          }
+        }
+
+        let matchingOptions = [];
+        if (q.type === 'matching' && correctAnswers.length > 0) {
+          matchingOptions = [...correctAnswers];
+          for (let i = matchingOptions.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            const temp = matchingOptions[i];
+            matchingOptions[i] = matchingOptions[j];
+            matchingOptions[j] = temp;
+          }
+        }
+
+        return {
+          questionId: q._id.toString(),
+          type: q.type,
+          statement: q.statement,
+          options: options,
+          correctAnswers: correctAnswers,
+          matchingOptions: matchingOptions,
+          points: q.points || 1,
+          imageUrl: q.imageUrl
+        };
+      });
+
+      const newAttempt = new this.attemptModel({
+        assessmentId: new Types.ObjectId(assessmentId),
+        studentId: new Types.ObjectId(studentId),
+        startTime: new Date(), // They will take it later, but we create it now
+        status: AttemptStatus.PAPER_PENDING,
+        source: AttemptSource.PAPER,
+        questionsPulled: snapshotQuestions,
+        maxScore: maxScore
+      });
+
+      const savedAttempt = await newAttempt.save();
+      const populatedAttempt = await savedAttempt.populate('studentId', 'name username');
+      createdAttempts.push(populatedAttempt);
+    }
+    return createdAttempts;
+  }
+
+  async submitPaperAttempt(
+    attemptId: string, 
+    studentId: string, 
+    studentAnswers: { questionId: string, answers: string[] }[]
+  ): Promise<AssessmentAttempt> {
+    const attempt = await this.attemptModel.findOne({ 
+      _id: attemptId, 
+      studentId: new Types.ObjectId(studentId),
+      source: AttemptSource.PAPER 
+    }).populate('assessmentId');
+    
+    if (!attempt) throw new NotFoundException('Paper attempt not found');
+    
+    if (attempt.status === AttemptStatus.COMPLETED) {
+      throw new BadRequestException('This attempt is already submitted');
+    }
+
+    const now = new Date();
+    let score = 0;
+    const answersMap = new Map();
+    studentAnswers.forEach(sa => answersMap.set(sa.questionId, sa.answers));
+
+    attempt.questionsPulled.forEach(q => {
+      const sAns = answersMap.get(q.questionId) || [];
+      let isCorrect = false;
+
+      if (q.type === 'single-choice' || q.type === 'true-false') {
+        if (sAns.length > 0 && q.correctAnswers.length > 0 && sAns[0] === q.correctAnswers[0]) {
+          isCorrect = true;
+        }
+      } else if (q.type === 'multiple-choice') {
+        if (sAns.length === q.correctAnswers.length) {
+          const sortedS = [...sAns].sort();
+          const sortedC = [...q.correctAnswers].sort();
+          isCorrect = sortedS.every((val, index) => val === sortedC[index]);
+        }
+      } else if (q.type === 'fill-blank') {
+        if (sAns.length > 0) {
+          const normalizeStr = (str: string) => (str || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+          const userAns = normalizeStr(sAns[0]);
+          isCorrect = q.correctAnswers.some(c => normalizeStr(c) === userAns);
+        }
+      } else if (q.type === 'matching') {
+        let correctPairs = 0;
+        const totalPairs = q.correctAnswers.length;
+        for (let i = 0; i < totalPairs; i++) {
+          if (sAns[i] && sAns[i] === q.correctAnswers[i]) {
+            correctPairs++;
+          }
+        }
+        if (correctPairs > 0) {
+          score += (correctPairs / totalPairs) * q.points;
+          if (correctPairs === totalPairs) {
+            isCorrect = true;
+          }
+        }
+      }
+
+      if (isCorrect && q.type !== 'matching') {
+        score += q.points;
+      }
+    });
+
+    attempt.studentAnswers = studentAnswers;
+    attempt.score = score;
+    attempt.status = AttemptStatus.COMPLETED;
+    attempt.endTime = now;
+    
+    return attempt.save();
   }
 
   async submitAttempt(
@@ -268,6 +486,16 @@ export class AssessmentAttemptsService {
     const attempt = await this.attemptModel.findOne({ _id: attemptId, studentId: new Types.ObjectId(studentId) }).populate('assessmentId');
     if (!attempt) throw new NotFoundException('Attempt not found');
     return this.sanitizeAttempt(attempt);
+  }
+
+  async getPaperAttemptById(attemptId: string): Promise<AssessmentAttempt> {
+    const attempt = await this.attemptModel.findOne({ 
+      _id: attemptId, 
+      source: AttemptSource.PAPER 
+    }).populate('assessmentId').populate('studentId', 'name username email');
+    
+    if (!attempt) throw new NotFoundException('Paper attempt not found');
+    return attempt;
   }
 
   async archiveAttempt(attemptId: string): Promise<AssessmentAttempt> {

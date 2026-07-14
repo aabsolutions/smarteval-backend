@@ -46,6 +46,10 @@ let AuthService = class AuthService {
         delete userObj.password;
         delete userObj._id;
         delete userObj.__v;
+        const logoUrl = await this.usersService.getUserInstitutionLogo(user);
+        if (logoUrl) {
+            userObj.institutionLogo = logoUrl;
+        }
         return {
             user: { id, ...userObj },
             token: {
@@ -91,6 +95,10 @@ let AuthService = class AuthService {
         delete userObj.password;
         delete userObj._id;
         delete userObj.__v;
+        const logoUrl = await this.usersService.getUserInstitutionLogo(user);
+        if (logoUrl) {
+            userObj.institutionLogo = logoUrl;
+        }
         return { id, ...userObj };
     }
 };

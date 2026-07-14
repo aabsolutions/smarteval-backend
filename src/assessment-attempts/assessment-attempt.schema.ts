@@ -6,6 +6,12 @@ export type AssessmentAttemptDocument = AssessmentAttempt & Document;
 export enum AttemptStatus {
   IN_PROGRESS = 'in-progress',
   COMPLETED = 'completed',
+  PAPER_PENDING = 'paper-pending',
+}
+
+export enum AttemptSource {
+  ONLINE = 'online',
+  PAPER = 'paper',
 }
 
 @Schema({ _id: false })
@@ -89,6 +95,9 @@ export class AssessmentAttempt {
 
   @Prop({ default: false })
   isArchived: boolean;
+
+  @Prop({ required: true, enum: AttemptSource, default: AttemptSource.ONLINE })
+  source: AttemptSource;
 }
 
 export const AssessmentAttemptSchema = SchemaFactory.createForClass(AssessmentAttempt);

@@ -11,7 +11,10 @@ import {
   Query,
   ForbiddenException,
   NotFoundException,
+  UseInterceptors,
+  UploadedFile
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { UsersService } from './users.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -100,14 +103,15 @@ export class UsersController {
 
   // Endpoints for regular users to manage their own profile
   @Put('me/profile')
-  async updateProfile(@Body() updateData: any, @Request() req: any) {
+  @UseInterceptors(FileInterceptor('avatar'))
+  async updateProfile(@Body() updateData: any, @Request() req: any, @UploadedFile() file?: Express.Multer.File) {
     const userId = req.user.userId || req.user.sub || req.user.id || req.user._id;
     // Evitar que actualicen su rol o su cedula
     delete updateData.roles;
     delete updateData.cedula;
     delete updateData.password;
     
-    return this.usersService.update(userId, updateData);
+    return this.usersService.update(userId, updateData, file);
   }
 
   @Put('me/change-password')

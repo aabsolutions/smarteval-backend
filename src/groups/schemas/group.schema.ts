@@ -26,3 +26,12 @@ export class Group extends Document {
 }
 
 export const GroupSchema = SchemaFactory.createForClass(Group);
+
+GroupSchema.virtual('students', {
+  ref: 'Student',
+  localField: '_id',
+  foreignField: 'groupId',
+});
+
+GroupSchema.set('toJSON', { virtuals: true });
+GroupSchema.set('toObject', { virtuals: true });

@@ -3,7 +3,9 @@ export type AssessmentDocument = Assessment & Document;
 export declare class Assessment {
     title: string;
     description: string;
-    topicId: Types.ObjectId;
+    topicId?: Types.ObjectId;
+    isCumulative: boolean;
+    cumulativeQuestionIds: Types.ObjectId[];
     teacherId: Types.ObjectId;
     groupIds: Types.ObjectId[];
     startTime: Date;
