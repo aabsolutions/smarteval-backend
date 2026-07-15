@@ -18,6 +18,7 @@ const mongoose_1 = require("@nestjs/mongoose");
 const mongoose_2 = require("mongoose");
 const question_schema_1 = require("./question.schema");
 const cloudinary_service_1 = require("../cloudinary/cloudinary.service");
+const docx_1 = require("docx");
 let QuestionsService = class QuestionsService {
     constructor(questionModel, cloudinaryService) {
         this.questionModel = questionModel;
@@ -117,6 +118,73 @@ let QuestionsService = class QuestionsService {
     }
     async updateBulkPoints(ids, points, teacherId) {
         return this.questionModel.updateMany({ _id: { $in: ids }, teacherId: new mongoose_2.Types.ObjectId(teacherId) }, { $set: { points } }).exec();
+    }
+    async generateDocxByTopic(topicId, teacherId) {
+        const questions = await this.findAllByTeacher(teacherId, topicId);
+        if (!questions || questions.length === 0) {
+            throw new common_1.NotFoundException('No se encontraron preguntas para este tema.');
+        }
+        const topicName = questions[0].topicId.name || 'Banco de Preguntas';
+        const children = [
+            new docx_1.Paragraph({
+                text: `Banco de Preguntas: ${topicName}`,
+                heading: docx_1.HeadingLevel.TITLE,
+            }),
+            new docx_1.Paragraph({ text: '' }),
+        ];
+        questions.forEach((q, index) => {
+            children.push(new docx_1.Paragraph({
+                children: [
+                    new docx_1.TextRun({ text: `${index + 1}. `, bold: true }),
+                    new docx_1.TextRun({ text: q.statement }),
+                ],
+            }));
+            if (q.type === question_schema_1.QuestionType.MATCHING) {
+                q.options.forEach((opt, i) => {
+                    children.push(new docx_1.Paragraph({
+                        text: `   • ${opt}  ->  ${q.correctAnswers[i] || ''}`,
+                    }));
+                });
+            }
+            else {
+                q.options.forEach((opt, i) => {
+                    const letter = String.fromCharCode(97 + i);
+                    children.push(new docx_1.Paragraph({
+                        text: `   ${letter}) ${opt}`,
+                    }));
+                });
+                children.push(new docx_1.Paragraph({
+                    children: [
+                        new docx_1.TextRun({ text: `   Respuesta(s): `, bold: true }),
+                        new docx_1.TextRun({ text: q.correctAnswers.join(', ') }),
+                    ],
+                }));
+            }
+            const typeTranslations = {
+                'single-choice': 'Opción Simple',
+                'multiple-choice': 'Opción Múltiple',
+                'true-false': 'Verdadero o Falso',
+                'fill-blank': 'Completar Espacios',
+                'matching': 'Emparejamiento',
+            };
+            const translatedType = typeTranslations[q.type] || q.type;
+            children.push(new docx_1.Paragraph({
+                children: [
+                    new docx_1.TextRun({ text: `   Tipo: `, bold: true }),
+                    new docx_1.TextRun({ text: translatedType }),
+                ],
+            }));
+            children.push(new docx_1.Paragraph({ text: '' }));
+        });
+        const doc = new docx_1.Document({
+            sections: [
+                {
+                    properties: {},
+                    children: children,
+                },
+            ],
+        });
+        return docx_1.Packer.toBuffer(doc);
     }
 };
 exports.QuestionsService = QuestionsService;

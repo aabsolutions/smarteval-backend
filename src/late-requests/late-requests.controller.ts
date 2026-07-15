@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Patch, Param, Body, UseInterceptors, UploadedFiles, Request, UseGuards, BadRequestException } from '@nestjs/common';
+import { Controller, Post, Get, Patch, Delete, Param, Body, UseInterceptors, UploadedFiles, Request, UseGuards, BadRequestException } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { LateRequestsService } from './late-requests.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -71,6 +71,15 @@ export class LateRequestsController {
     @Param('id') id: string
   ) {
     return this.lateRequestsService.cancelRequest(id, req.user.userId || req.user.sub);
+  }
+
+  @Delete(':id')
+  @Roles('TEACHER')
+  async deleteRequest(
+    @Request() req,
+    @Param('id') id: string
+  ) {
+    return this.lateRequestsService.deleteRequest(id, req.user.userId || req.user.sub);
   }
 }
 

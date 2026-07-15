@@ -1,4 +1,5 @@
-import { Controller, Get, Post, Body, Put, Param, Delete, UseGuards, Request, Query, UseInterceptors, UploadedFile, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Put, Param, Delete, UseGuards, Request, Query, UseInterceptors, UploadedFile, BadRequestException, Res } from '@nestjs/common';
+import { Response } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { QuestionsService } from './questions.service';
 import { CreateQuestionDto } from './dto/create-question.dto';
@@ -31,6 +32,21 @@ export class QuestionsController {
   @Post('bulk')
   createBulk(@Body() createBulkDto: CreateBulkQuestionsDto, @Request() req) {
     return this.questionsService.createBulk(createBulkDto.questions, req.user.userId);
+  }
+
+  @Get('export-docx')
+  async exportDocx(@Query('topicId') topicId: string, @Request() req, @Res() res: Response) {
+    if (!topicId) {
+      throw new BadRequestException('Se requiere topicId para exportar.');
+    }
+    const buffer = await this.questionsService.generateDocxByTopic(topicId, req.user.userId);
+    
+    res.set({
+      'Content-Type': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'Content-Disposition': `attachment; filename=banco_preguntas_${topicId}.docx`,
+    });
+    
+    res.send(buffer);
   }
 
   @Get()

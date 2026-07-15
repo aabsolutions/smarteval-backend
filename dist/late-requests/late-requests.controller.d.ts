@@ -33,4 +33,8 @@ export declare class LateRequestsController {
     }> & {
         __v: number;
     }>;
+    deleteRequest(req: any, id: string): Promise<{
+        success: boolean;
+        message: string;
+    }>;
 }

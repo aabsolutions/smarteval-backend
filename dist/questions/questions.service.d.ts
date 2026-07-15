@@ -20,4 +20,5 @@ export declare class QuestionsService {
     remove(id: string, teacherId: string): Promise<Question>;
     removeBulk(ids: string[], teacherId: string): Promise<any>;
     updateBulkPoints(ids: string[], points: number, teacherId: string): Promise<any>;
+    generateDocxByTopic(topicId: string, teacherId: string): Promise<Buffer>;
 }

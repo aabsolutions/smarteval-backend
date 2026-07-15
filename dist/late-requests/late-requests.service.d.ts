@@ -39,4 +39,8 @@ export declare class LateRequestsService {
     }> & {
         __v: number;
     }>;
+    deleteRequest(id: string, teacherId: string): Promise<{
+        success: boolean;
+        message: string;
+    }>;
 }

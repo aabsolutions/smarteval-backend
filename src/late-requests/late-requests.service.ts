@@ -191,4 +191,23 @@ export class LateRequestsService {
 
     return updated;
   }
+
+  async deleteRequest(id: string, teacherId: string) {
+    const request = await this.lateRequestModel.findById(id).exec();
+    if (!request) throw new NotFoundException('Solicitud no encontrada');
+    
+    if (request.teacherId.toString() !== teacherId) {
+      throw new ForbiddenException('No autorizado para eliminar esta solicitud');
+    }
+
+    // Remover imágenes de Cloudinary si existen
+    if (request.imagePublicIds && request.imagePublicIds.length > 0) {
+      for (const pubId of request.imagePublicIds) {
+        try { await this.cloudinaryService.deleteImage(pubId); } catch(e) {}
+      }
+    }
+
+    await this.lateRequestModel.findByIdAndDelete(id).exec();
+    return { success: true, message: 'Solicitud eliminada' };
+  }
 }

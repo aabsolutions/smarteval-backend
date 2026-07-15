@@ -38,6 +38,17 @@ let QuestionsController = class QuestionsController {
     createBulk(createBulkDto, req) {
         return this.questionsService.createBulk(createBulkDto.questions, req.user.userId);
     }
+    async exportDocx(topicId, req, res) {
+        if (!topicId) {
+            throw new common_1.BadRequestException('Se requiere topicId para exportar.');
+        }
+        const buffer = await this.questionsService.generateDocxByTopic(topicId, req.user.userId);
+        res.set({
+            'Content-Type': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'Content-Disposition': `attachment; filename=banco_preguntas_${topicId}.docx`,
+        });
+        res.send(buffer);
+    }
     findAll(topicId, req) {
         return this.questionsService.findAllByTeacher(req.user.userId, topicId);
     }
@@ -82,6 +93,15 @@ __decorate([
     __metadata("design:paramtypes", [create_bulk_questions_dto_1.CreateBulkQuestionsDto, Object]),
     __metadata("design:returntype", void 0)
 ], QuestionsController.prototype, "createBulk", null);
+__decorate([
+    (0, common_1.Get)('export-docx'),
+    __param(0, (0, common_1.Query)('topicId')),
+    __param(1, (0, common_1.Request)()),
+    __param(2, (0, common_1.Res)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object, Object]),
+    __metadata("design:returntype", Promise)
+], QuestionsController.prototype, "exportDocx", null);
 __decorate([
     (0, common_1.Get)(),
     __param(0, (0, common_1.Query)('topicId')),

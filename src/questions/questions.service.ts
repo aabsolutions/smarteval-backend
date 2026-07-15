@@ -5,6 +5,7 @@ import { Question, QuestionDocument, QuestionType } from './question.schema';
 import { CreateQuestionDto } from './dto/create-question.dto';
 import { UpdateQuestionDto } from './dto/update-question.dto';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
+import { Document, Packer, Paragraph, TextRun, HeadingLevel } from 'docx';
 
 @Injectable()
 export class QuestionsService {
@@ -126,5 +127,95 @@ export class QuestionsService {
       { _id: { $in: ids }, teacherId: new Types.ObjectId(teacherId) },
       { $set: { points } }
     ).exec();
+  }
+
+  async generateDocxByTopic(topicId: string, teacherId: string): Promise<Buffer> {
+    const questions = await this.findAllByTeacher(teacherId, topicId);
+    if (!questions || questions.length === 0) {
+      throw new NotFoundException('No se encontraron preguntas para este tema.');
+    }
+
+    const topicName = (questions[0].topicId as any).name || 'Banco de Preguntas';
+
+    const children: any[] = [
+      new Paragraph({
+        text: `Banco de Preguntas: ${topicName}`,
+        heading: HeadingLevel.TITLE,
+      }),
+      new Paragraph({ text: '' }), 
+    ];
+
+    questions.forEach((q, index) => {
+      // Pregunta
+      children.push(
+        new Paragraph({
+          children: [
+            new TextRun({ text: `${index + 1}. `, bold: true }),
+            new TextRun({ text: q.statement }),
+          ],
+        })
+      );
+
+      // Opciones
+      if (q.type === QuestionType.MATCHING) {
+        q.options.forEach((opt, i) => {
+          children.push(
+            new Paragraph({
+              text: `   • ${opt}  ->  ${q.correctAnswers[i] || ''}`,
+            })
+          );
+        });
+      } else {
+        q.options.forEach((opt, i) => {
+          const letter = String.fromCharCode(97 + i); // a, b, c, d
+          children.push(
+            new Paragraph({
+              text: `   ${letter}) ${opt}`,
+            })
+          );
+        });
+        
+        // Respuestas
+        children.push(
+          new Paragraph({
+            children: [
+              new TextRun({ text: `   Respuesta(s): `, bold: true }),
+              new TextRun({ text: q.correctAnswers.join(', ') }),
+            ],
+          })
+        );
+      }
+      
+      const typeTranslations: Record<string, string> = {
+        'single-choice': 'Opción Simple',
+        'multiple-choice': 'Opción Múltiple',
+        'true-false': 'Verdadero o Falso',
+        'fill-blank': 'Completar Espacios',
+        'matching': 'Emparejamiento',
+      };
+      const translatedType = typeTranslations[q.type] || q.type;
+
+      children.push(
+          new Paragraph({
+            children: [
+              new TextRun({ text: `   Tipo: `, bold: true }),
+              new TextRun({ text: translatedType }),
+            ],
+          })
+        );
+
+      children.push(new Paragraph({ text: '' })); // Spacing
+    });
+
+    const doc = new Document({
+      sections: [
+        {
+          properties: {},
+          children: children,
+        },
+      ],
+    });
+
+    return Packer.toBuffer(doc);
   }
 }

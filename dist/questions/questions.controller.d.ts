@@ -1,3 +1,4 @@
+import { Response } from 'express';
 import { QuestionsService } from './questions.service';
 import { CreateQuestionDto } from './dto/create-question.dto';
 import { UpdateQuestionDto } from './dto/update-question.dto';
@@ -11,6 +12,7 @@ export declare class QuestionsController {
     }>;
     create(createQuestionDto: CreateQuestionDto, req: any): Promise<import("./question.schema").Question>;
     createBulk(createBulkDto: CreateBulkQuestionsDto, req: any): Promise<import("./question.schema").Question[]>;
+    exportDocx(topicId: string, req: any, res: Response): Promise<void>;
     findAll(topicId: string, req: any): Promise<import("./question.schema").Question[]>;
     findOne(id: string, req: any): Promise<import("./question.schema").Question>;
     update(id: string, updateQuestionDto: UpdateQuestionDto, req: any): Promise<import("./question.schema").Question>;

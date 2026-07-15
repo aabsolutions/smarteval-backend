@@ -47,6 +47,9 @@ let LateRequestsController = class LateRequestsController {
     async cancelRequest(req, id) {
         return this.lateRequestsService.cancelRequest(id, req.user.userId || req.user.sub);
     }
+    async deleteRequest(req, id) {
+        return this.lateRequestsService.deleteRequest(id, req.user.userId || req.user.sub);
+    }
 };
 exports.LateRequestsController = LateRequestsController;
 __decorate([
@@ -111,6 +114,15 @@ __decorate([
     __metadata("design:paramtypes", [Object, String]),
     __metadata("design:returntype", Promise)
 ], LateRequestsController.prototype, "cancelRequest", null);
+__decorate([
+    (0, common_1.Delete)(':id'),
+    (0, roles_decorator_1.Roles)('TEACHER'),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", Promise)
+], LateRequestsController.prototype, "deleteRequest", null);
 exports.LateRequestsController = LateRequestsController = __decorate([
     (0, common_1.Controller)('late-requests'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),

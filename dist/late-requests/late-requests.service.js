@@ -155,6 +155,24 @@ let LateRequestsService = class LateRequestsService {
         await this.notificationsService.create(request.teacherId.toString(), 'Solicitud Anulada', `Un estudiante ha anulado su solicitud de examen atrasado.`, 'INFO');
         return updated;
     }
+    async deleteRequest(id, teacherId) {
+        const request = await this.lateRequestModel.findById(id).exec();
+        if (!request)
+            throw new common_1.NotFoundException('Solicitud no encontrada');
+        if (request.teacherId.toString() !== teacherId) {
+            throw new common_1.ForbiddenException('No autorizado para eliminar esta solicitud');
+        }
+        if (request.imagePublicIds && request.imagePublicIds.length > 0) {
+            for (const pubId of request.imagePublicIds) {
+                try {
+                    await this.cloudinaryService.deleteImage(pubId);
+                }
+                catch (e) { }
+            }
+        }
+        await this.lateRequestModel.findByIdAndDelete(id).exec();
+        return { success: true, message: 'Solicitud eliminada' };
+    }
 };
 exports.LateRequestsService = LateRequestsService;
 exports.LateRequestsService = LateRequestsService = __decorate([
