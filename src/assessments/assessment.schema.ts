@@ -59,6 +59,9 @@ export class Assessment {
   @Prop({ default: 0 })
   flashcardsTimeLimitMinutes: number;
 
+  @Prop({ type: [{ type: MongooseSchema.Types.ObjectId, ref: 'User' }], default: [] })
+  flashcardUsers: Types.ObjectId[];
+
   @Prop({ default: false })
   isArchived: boolean;
 }

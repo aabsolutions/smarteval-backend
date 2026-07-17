@@ -25,6 +25,7 @@ __decorate([
 ], CreateAssessmentDto.prototype, "description", void 0);
 __decorate([
     (0, class_validator_1.IsMongoId)(),
+    (0, class_validator_1.IsOptional)(),
     __metadata("design:type", String)
 ], CreateAssessmentDto.prototype, "topicId", void 0);
 __decorate([
@@ -46,8 +47,20 @@ __decorate([
 ], CreateAssessmentDto.prototype, "durationMinutes", void 0);
 __decorate([
     (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.IsOptional)(),
     __metadata("design:type", Number)
 ], CreateAssessmentDto.prototype, "totalQuestionsToPull", void 0);
+__decorate([
+    (0, class_validator_1.IsBoolean)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Boolean)
+], CreateAssessmentDto.prototype, "isCumulative", void 0);
+__decorate([
+    (0, class_validator_1.IsArray)(),
+    (0, class_validator_1.IsMongoId)({ each: true }),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Array)
+], CreateAssessmentDto.prototype, "cumulativeQuestionIds", void 0);
 __decorate([
     (0, class_validator_1.IsBoolean)(),
     (0, class_validator_1.IsOptional)(),

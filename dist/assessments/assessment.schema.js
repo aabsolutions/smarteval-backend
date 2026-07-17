@@ -88,6 +88,10 @@ __decorate([
     __metadata("design:type", Number)
 ], Assessment.prototype, "flashcardsTimeLimitMinutes", void 0);
 __decorate([
+    (0, mongoose_1.Prop)({ type: [{ type: mongoose_2.Schema.Types.ObjectId, ref: 'User' }], default: [] }),
+    __metadata("design:type", Array)
+], Assessment.prototype, "flashcardUsers", void 0);
+__decorate([
     (0, mongoose_1.Prop)({ default: false }),
     __metadata("design:type", Boolean)
 ], Assessment.prototype, "isArchived", void 0);

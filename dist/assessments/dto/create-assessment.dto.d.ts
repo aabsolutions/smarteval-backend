@@ -1,12 +1,14 @@
 export declare class CreateAssessmentDto {
     title: string;
     description: string;
-    topicId: string;
+    topicId?: string;
     groupIds: string[];
     startTime: string;
     endTime: string;
     durationMinutes: number;
-    totalQuestionsToPull: number;
+    totalQuestionsToPull?: number;
+    isCumulative?: boolean;
+    cumulativeQuestionIds?: string[];
     isActive?: boolean;
     antiCheat?: boolean;
     shuffleOptions: boolean;

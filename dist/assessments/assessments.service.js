@@ -30,12 +30,18 @@ let AssessmentsService = class AssessmentsService {
         this.studentsService = studentsService;
     }
     async create(createDto, teacherId) {
-        const created = new this.assessmentModel({
+        const assessmentData = {
             ...createDto,
-            topicId: new mongoose_2.Types.ObjectId(createDto.topicId),
             teacherId: new mongoose_2.Types.ObjectId(teacherId),
             groupIds: createDto.groupIds.map(id => new mongoose_2.Types.ObjectId(id)),
-        });
+        };
+        if (createDto.topicId) {
+            assessmentData.topicId = new mongoose_2.Types.ObjectId(createDto.topicId);
+        }
+        if (createDto.cumulativeQuestionIds) {
+            assessmentData.cumulativeQuestionIds = createDto.cumulativeQuestionIds.map(id => new mongoose_2.Types.ObjectId(id));
+        }
+        const created = new this.assessmentModel(assessmentData);
         await created.save();
         if (createDto.groupIds && createDto.groupIds.length > 0) {
             try {
@@ -86,10 +92,11 @@ let AssessmentsService = class AssessmentsService {
             if (extension) {
                 console.log(`Matching extension found for assessment ${a._id}. extensionUntil:`, extension.extensionUntil);
             }
+            const hasDoneFlashcards = a.flashcardUsers ? a.flashcardUsers.some((id) => id.toString() === userId.toString()) : false;
             if (extension && extension.extensionUntil) {
-                return { ...a, extensionUntil: extension.extensionUntil };
+                return { ...a, extensionUntil: extension.extensionUntil, hasDoneFlashcards };
             }
-            return a;
+            return { ...a, hasDoneFlashcards };
         });
     }
     async getFlashcards(assessmentId, username, userId) {
@@ -98,6 +105,15 @@ let AssessmentsService = class AssessmentsService {
         if (!assessment) {
             throw new common_1.NotFoundException('Examen no encontrado o no tienes acceso para estudiarlo.');
         }
+        if (assessment.flashcardsTimeLimitMinutes === 0) {
+            throw new common_1.BadRequestException('El repaso no está habilitado para este examen.');
+        }
+        if (assessment.hasDoneFlashcards) {
+            throw new common_1.BadRequestException('Ya has realizado el repaso para este examen. Solo se permite una vez.');
+        }
+        await this.assessmentModel.findByIdAndUpdate(assessmentId, {
+            $addToSet: { flashcardUsers: new mongoose_2.Types.ObjectId(userId) }
+        });
         const questions = await this.questionModel.find({ topicId: assessment.topicId._id || assessment.topicId }).lean().exec();
         if (questions.length === 0) {
             throw new common_1.BadRequestException('No hay preguntas disponibles en este tema.');

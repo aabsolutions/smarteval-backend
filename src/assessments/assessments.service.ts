@@ -20,12 +20,21 @@ export class AssessmentsService {
   ) {}
 
   async create(createDto: CreateAssessmentDto, teacherId: string): Promise<Assessment> {
-    const created = new this.assessmentModel({
+    const assessmentData: any = {
       ...createDto,
-      topicId: new Types.ObjectId(createDto.topicId),
       teacherId: new Types.ObjectId(teacherId),
       groupIds: createDto.groupIds.map(id => new Types.ObjectId(id)),
-    });
+    };
+
+    if (createDto.topicId) {
+      assessmentData.topicId = new Types.ObjectId(createDto.topicId);
+    }
+
+    if (createDto.cumulativeQuestionIds) {
+      assessmentData.cumulativeQuestionIds = createDto.cumulativeQuestionIds.map(id => new Types.ObjectId(id));
+    }
+
+    const created = new this.assessmentModel(assessmentData);
     
     await created.save();
 
@@ -91,10 +100,13 @@ export class AssessmentsService {
       if (extension) {
         console.log(`Matching extension found for assessment ${a._id}. extensionUntil:`, extension.extensionUntil);
       }
+      
+      const hasDoneFlashcards = a.flashcardUsers ? a.flashcardUsers.some((id: any) => id.toString() === userId.toString()) : false;
+
       if (extension && extension.extensionUntil) {
-        return { ...a, extensionUntil: extension.extensionUntil };
+        return { ...a, extensionUntil: extension.extensionUntil, hasDoneFlashcards };
       }
-      return a;
+      return { ...a, hasDoneFlashcards };
     });
   }
 
@@ -105,6 +117,19 @@ export class AssessmentsService {
     if (!assessment) {
       throw new NotFoundException('Examen no encontrado o no tienes acceso para estudiarlo.');
     }
+
+    if (assessment.flashcardsTimeLimitMinutes === 0) {
+      throw new BadRequestException('El repaso no está habilitado para este examen.');
+    }
+
+    if (assessment.hasDoneFlashcards) {
+      throw new BadRequestException('Ya has realizado el repaso para este examen. Solo se permite una vez.');
+    }
+
+    // Registrar que el estudiante inició las flashcards
+    await this.assessmentModel.findByIdAndUpdate(assessmentId, {
+      $addToSet: { flashcardUsers: new Types.ObjectId(userId) }
+    });
 
     const questions = await this.questionModel.find({ topicId: assessment.topicId._id || assessment.topicId }).lean().exec();
 

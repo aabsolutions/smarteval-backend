@@ -9,7 +9,8 @@ export class CreateAssessmentDto {
   description: string;
 
   @IsMongoId()
-  topicId: string;
+  @IsOptional()
+  topicId?: string;
 
   @IsArray()
   @IsMongoId({ each: true })
@@ -25,7 +26,17 @@ export class CreateAssessmentDto {
   durationMinutes: number;
 
   @IsNumber()
-  totalQuestionsToPull: number;
+  @IsOptional()
+  totalQuestionsToPull?: number;
+
+  @IsBoolean()
+  @IsOptional()
+  isCumulative?: boolean;
+
+  @IsArray()
+  @IsMongoId({ each: true })
+  @IsOptional()
+  cumulativeQuestionIds?: string[];
 
   @IsBoolean()
   @IsOptional()
