@@ -21,6 +21,9 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
+import { multerImageConfig } from '../common/config/multer-image.config';
 
 @Controller('users')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -103,19 +106,14 @@ export class UsersController {
 
   // Endpoints for regular users to manage their own profile
   @Put('me/profile')
-  @UseInterceptors(FileInterceptor('avatar'))
-  async updateProfile(@Body() updateData: any, @Request() req: any, @UploadedFile() file?: Express.Multer.File) {
+  @UseInterceptors(FileInterceptor('avatar', multerImageConfig))
+  async updateProfile(@Body() updateData: UpdateProfileDto, @Request() req: any, @UploadedFile() file?: Express.Multer.File) {
     const userId = req.user.userId || req.user.sub || req.user.id || req.user._id;
-    // Evitar que actualicen su rol o su cedula
-    delete updateData.roles;
-    delete updateData.cedula;
-    delete updateData.password;
-    
     return this.usersService.update(userId, updateData, file);
   }
 
   @Put('me/change-password')
-  async changePassword(@Body() passData: any, @Request() req: any) {
+  async changePassword(@Body() passData: ChangePasswordDto, @Request() req: any) {
     const userId = req.user.userId || req.user.sub || req.user.id || req.user._id;
     return this.usersService.changePassword(userId, passData.currentPassword, passData.newPassword);
   }
