@@ -43,3 +43,7 @@ Thumbs.db
 
 # misc
 .npmrc
+
+# Data dumps / fixtures with real PII — never commitear esto
+debug.json
+user.json
