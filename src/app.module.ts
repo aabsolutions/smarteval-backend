@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { GroupsModule } from './groups/groups.module';
@@ -37,6 +39,9 @@ import { LateRequestsModule } from './late-requests/late-requests.module';
       }),
     }),
 
+    // Rate limiting global: 20 requests / 60s por IP salvo overrides puntuales (ej. login)
+    ThrottlerModule.forRoot([{ ttl: 60000, limit: 20 }]),
+
     AuthModule,
     UsersModule,
     GroupsModule,
@@ -50,6 +55,12 @@ import { LateRequestsModule } from './late-requests/late-requests.module';
     TeachersModule,
     CloudinaryModule,
     LateRequestsModule,
+  ],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
   ],
 })
 export class AppModule {}

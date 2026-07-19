@@ -5,6 +5,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { LateRequestStatus } from './late-request.schema';
+import { multerImageConfig } from '../common/config/multer-image.config';
 
 @Controller('late-requests')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -13,7 +14,7 @@ export class LateRequestsController {
 
   @Post()
   @Roles('STUDENT')
-  @UseInterceptors(FilesInterceptor('files', 5))
+  @UseInterceptors(FilesInterceptor('files', 5, multerImageConfig))
   async createRequest(
     @Request() req,
     @Body('teacherId') teacherId: string,
@@ -30,7 +31,7 @@ export class LateRequestsController {
 
   @Patch(':id/update')
   @Roles('STUDENT')
-  @UseInterceptors(FilesInterceptor('files', 5))
+  @UseInterceptors(FilesInterceptor('files', 5, multerImageConfig))
   async updateRequest(
     @Request() req,
     @Param('id') id: string,

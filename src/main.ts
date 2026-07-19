@@ -1,17 +1,21 @@
 import { NestFactory, Reflector } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
+import helmet from 'helmet';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  app.use(helmet());
+
   // Prefijo global de la API — coincide con el proxy del frontend (/api)
   app.setGlobalPrefix('api');
 
-  // CORS: en desarrollo se permite todo; en producción acotar ALLOWED_ORIGINS
+  // CORS: allowlist desde ALLOWED_ORIGINS (coma-separado). Default solo cubre el front en dev.
+  const allowedOrigins = (process.env.ALLOWED_ORIGINS ?? 'http://localhost:4200').split(',');
   app.enableCors({
-    origin: '*',
+    origin: allowedOrigins,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     allowedHeaders: 'Content-Type,Authorization',
   });

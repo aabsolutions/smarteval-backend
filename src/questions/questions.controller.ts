@@ -8,6 +8,7 @@ import { CreateBulkQuestionsDto } from './dto/create-bulk-questions.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
+import { multerImageConfig } from '../common/config/multer-image.config';
 
 @Controller('questions')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -16,7 +17,7 @@ export class QuestionsController {
   constructor(private readonly questionsService: QuestionsService) {}
 
   @Post('upload-image')
-  @UseInterceptors(FileInterceptor('image'))
+  @UseInterceptors(FileInterceptor('image', multerImageConfig))
   async uploadImage(@UploadedFile() file: Express.Multer.File) {
     if (!file) {
       throw new BadRequestException('No se proporcionó ninguna imagen');
