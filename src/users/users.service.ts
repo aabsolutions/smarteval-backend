@@ -2,6 +2,7 @@ import { Injectable, OnModuleInit, NotFoundException, BadRequestException } from
 import { InjectModel, InjectConnection } from '@nestjs/mongoose';
 import { Model, Connection } from 'mongoose';
 import * as bcrypt from 'bcryptjs';
+import * as crypto from 'crypto';
 import { User } from './schemas/user.schema';
 import { NotificationsService } from '../notifications/notifications.service';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
@@ -183,7 +184,7 @@ export class UsersService implements OnModuleInit {
     try {
       const userCount = await this.userModel.countDocuments();
       const superAdminCount = await this.userModel.countDocuments({ username: 'superadmin' });
-      
+
       if (userCount > 0 && superAdminCount > 0) {
         console.log('La base de datos ya contiene usuarios y al superadmin. Saltando el seeding.');
         return;
@@ -193,9 +194,13 @@ export class UsersService implements OnModuleInit {
 
       const initialUsers = [];
       if (superAdminCount === 0) {
+        const superAdminPassword = process.env.SUPERADMIN_PASSWORD || crypto.randomBytes(12).toString('base64url');
+        if (!process.env.SUPERADMIN_PASSWORD) {
+          console.log(`[seed] Contraseña generada para 'superadmin': ${superAdminPassword} — guardala ahora, no se vuelve a mostrar.`);
+        }
         initialUsers.push({
           username: 'superadmin',
-          password: await bcrypt.hash('superadmin@123', 10),
+          password: await bcrypt.hash(superAdminPassword, 10),
           name: 'Super Admin',
           email: 'superadmin@school.org',
           roles: [{ name: 'SUPERADMIN', priority: 0 }],
@@ -204,7 +209,9 @@ export class UsersService implements OnModuleInit {
         });
       }
 
-      if (userCount === 0 || (userCount > 0 && superAdminCount === 0 && userCount <= 3)) {
+      // Los usuarios demo (admin/teacher/student con password fija) solo se siembran fuera de producción.
+      const allowDemoSeed = process.env.NODE_ENV !== 'production';
+      if (allowDemoSeed && (userCount === 0 || (userCount > 0 && superAdminCount === 0 && userCount <= 3))) {
         // Solo agregar los defaults si no hay otros, para no duplicar admin/teacher si ya están creados por error
         initialUsers.push(
           {
@@ -235,6 +242,10 @@ export class UsersService implements OnModuleInit {
             avatar: 'student.jpg',
           }
         );
+      }
+
+      if (initialUsers.length === 0) {
+        return;
       }
 
       await this.userModel.insertMany(initialUsers);
