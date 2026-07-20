@@ -8,28 +8,34 @@ import {
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 
-@Catch(HttpException)
+@Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
   private readonly logger = new Logger(HttpExceptionFilter.name);
 
-  catch(exception: HttpException, host: ArgumentsHost) {
+  catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
-    const status = exception.getStatus();
-    const exceptionResponse = exception.getResponse();
+    const isHttpException = exception instanceof HttpException;
+    const status = isHttpException
+      ? exception.getStatus()
+      : HttpStatus.INTERNAL_SERVER_ERROR;
 
-    const errorMessage =
-      typeof exceptionResponse === 'object' && 'message' in exceptionResponse
-        ? (exceptionResponse as any).message
-        : exceptionResponse;
+    // Para errores no-HTTP (ej. excepciones de Mongoose, TypeError) nunca exponemos
+    // exception.message al cliente — puede contener detalles internos (queries,
+    // paths de archivo, etc). El mensaje real solo va al logger del servidor.
+    const errorMessage = isHttpException
+      ? (() => {
+          const exceptionResponse = exception.getResponse();
+          return typeof exceptionResponse === 'object' && 'message' in exceptionResponse
+            ? (exceptionResponse as any).message
+            : exceptionResponse;
+        })()
+      : 'Internal server error';
 
-    // Loguear errores 5xx
     if (status >= HttpStatus.INTERNAL_SERVER_ERROR) {
-      this.logger.error(
-        `${request.method} ${request.url} ${status}`,
-        exception.stack,
-      );
+      const stack = exception instanceof Error ? exception.stack : undefined;
+      this.logger.error(`${request.method} ${request.url} ${status}`, stack);
     }
 
     response.status(status).json({

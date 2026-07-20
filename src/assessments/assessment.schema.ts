@@ -35,8 +35,16 @@ export class Assessment {
   @Prop({ required: true })
   durationMinutes: number;
 
-  @Prop({ required: true })
-  totalQuestionsToPull: number;
+  // Solo requerido para exámenes no acumulativos: el $sample aleatorio de preguntas
+  // (assessment-attempts.service.ts) usa este valor. Los acumulativos usan
+  // cumulativeQuestionIds en su lugar y el frontend nunca manda este campo para ellos.
+  @Prop({
+    required: [
+      function (this: Assessment) { return !this.isCumulative; },
+      'totalQuestionsToPull is required for non-cumulative assessments',
+    ],
+  })
+  totalQuestionsToPull?: number;
 
   @Prop({ default: true })
   isActive: boolean;

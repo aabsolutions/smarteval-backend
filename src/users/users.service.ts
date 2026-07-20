@@ -7,6 +7,12 @@ import { User } from './schemas/user.schema';
 import { NotificationsService } from '../notifications/notifications.service';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
 
+// Escapa metacaracteres de regex para que el input del usuario se use como texto literal,
+// no como patrón — evita ReDoS y errores de sintaxis si el usuario manda regex inválido.
+function escapeRegex(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 @Injectable()
 export class UsersService implements OnModuleInit {
   constructor(
@@ -71,7 +77,7 @@ export class UsersService implements OnModuleInit {
     const query: any = { 'roles.name': { $in: allowedRoles } };
 
     if (search && search.trim()) {
-      const regex = new RegExp(search.trim(), 'i');
+      const regex = new RegExp(escapeRegex(search.trim()), 'i');
       query.$or = [
         { name: regex },
         { username: regex },
