@@ -39,8 +39,8 @@ import { LateRequestsModule } from './late-requests/late-requests.module';
       }),
     }),
 
-    // Rate limiting global: 20 requests / 60s por IP salvo overrides puntuales (ej. login)
-    ThrottlerModule.forRoot([{ ttl: 60000, limit: 20 }]),
+    // Rate limiting global: 100 requests / 60s por IP. 20 era MUY poco para una SPA.
+    ThrottlerModule.forRoot([{ ttl: 60000, limit: 100 }]),
 
     AuthModule,
     UsersModule,
