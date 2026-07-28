@@ -536,7 +536,11 @@ export class AssessmentAttemptsService {
   async getAttemptDetails(attemptId: string, studentId: string): Promise<any> {
     const attempt = await this.attemptModel.findOne({ _id: attemptId, studentId: new Types.ObjectId(studentId) }).populate('assessmentId').populate('studentId', 'name username email');
     if (!attempt) throw new NotFoundException('Attempt not found');
-    return this.sanitizeAttempt(attempt);
+    const sanitized = this.sanitizeAttempt(attempt);
+    return {
+      ...sanitized,
+      serverTime: new Date().toISOString()
+    };
   }
 
   async getAttemptDetailsForTeacher(attemptId: string): Promise<any> {
