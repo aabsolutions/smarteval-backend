@@ -90,6 +90,9 @@ let AssessmentAttemptsService = class AssessmentAttemptsService {
                 _id: { $in: assessment.cumulativeQuestionIds }
             }).exec();
             randomQuestions.sort(() => Math.random() - 0.5);
+            if (assessment.totalQuestionsToPull && assessment.totalQuestionsToPull > 0) {
+                randomQuestions = randomQuestions.slice(0, assessment.totalQuestionsToPull);
+            }
         }
         else {
             const pipeline = [
@@ -196,6 +199,9 @@ let AssessmentAttemptsService = class AssessmentAttemptsService {
                     _id: { $in: assessment.cumulativeQuestionIds }
                 }).exec();
                 randomQuestions.sort(() => Math.random() - 0.5);
+                if (assessment.totalQuestionsToPull && assessment.totalQuestionsToPull > 0) {
+                    randomQuestions = randomQuestions.slice(0, assessment.totalQuestionsToPull);
+                }
             }
             else {
                 const pipeline = [
@@ -395,7 +401,8 @@ let AssessmentAttemptsService = class AssessmentAttemptsService {
         }).sort({ createdAt: -1 }).exec();
         return {
             attemptsCount: attempts.length,
-            history: attempts.map(a => this.sanitizeAttempt(a))
+            history: attempts.map(a => this.sanitizeAttempt(a)),
+            serverTime: new Date().toISOString()
         };
     }
     async getStudentHistory(studentId) {
@@ -405,10 +412,9 @@ let AssessmentAttemptsService = class AssessmentAttemptsService {
             isArchived: { $ne: true }
         })
             .sort({ endTime: -1 })
-            .limit(5)
             .populate({
             path: 'assessmentId',
-            select: 'title topicId',
+            select: 'title topicId flashcardUsages flashcardsTimeLimitMinutes',
             populate: {
                 path: 'topicId',
                 select: 'name'
@@ -416,7 +422,48 @@ let AssessmentAttemptsService = class AssessmentAttemptsService {
         })
             .lean()
             .exec();
-        return attempts;
+        const processedAttempts = attempts.map((attempt) => {
+            const assessment = attempt.assessmentId;
+            const usage = assessment?.flashcardUsages?.find((u) => u.studentId.toString() === studentId.toString());
+            return {
+                ...attempt,
+                usedFlashcards: !!usage,
+                flashcardsTimeSeconds: usage ? usage.timeSpentSeconds : 0,
+                flashcardsTimeLimitMinutes: assessment?.flashcardsTimeLimitMinutes || 0
+            };
+        });
+        const bestAttemptsMap = new Map();
+        for (const attempt of processedAttempts) {
+            const assessId = attempt.assessmentId?._id?.toString() || attempt.assessmentId?.toString();
+            if (!assessId)
+                continue;
+            if (!bestAttemptsMap.has(assessId)) {
+                bestAttemptsMap.set(assessId, attempt);
+            }
+            else {
+                const existing = bestAttemptsMap.get(assessId);
+                const currentScore = attempt.score / (attempt.maxScore || 1);
+                const existingScore = existing.score / (existing.maxScore || 1);
+                if (currentScore > existingScore) {
+                    bestAttemptsMap.set(assessId, attempt);
+                }
+            }
+        }
+        return Array.from(bestAttemptsMap.values()).sort((a, b) => {
+            return new Date(b.endTime).getTime() - new Date(a.endTime).getTime();
+        });
+    }
+    async getStudentHistoryByProfileId(studentProfileId) {
+        const StudentModel = this.connection.model('Student');
+        const UserModel = this.connection.model('User');
+        const student = await StudentModel.findById(studentProfileId).exec();
+        if (!student)
+            throw new common_1.NotFoundException('Student profile not found');
+        const user = await UserModel.findOne({ username: student.identifier }).exec();
+        if (!user) {
+            return [];
+        }
+        return this.getStudentHistory(user._id.toString());
     }
     async getAttemptsByAssessment(assessmentId, studentId) {
         return this.attemptModel.find({
@@ -429,7 +476,13 @@ let AssessmentAttemptsService = class AssessmentAttemptsService {
         return this.attemptModel.deleteMany({ studentId: new mongoose_2.Types.ObjectId(studentId) }).exec();
     }
     async getAttemptDetails(attemptId, studentId) {
-        const attempt = await this.attemptModel.findOne({ _id: attemptId, studentId: new mongoose_2.Types.ObjectId(studentId) }).populate('assessmentId');
+        const attempt = await this.attemptModel.findOne({ _id: attemptId, studentId: new mongoose_2.Types.ObjectId(studentId) }).populate('assessmentId').populate('studentId', 'name username email');
+        if (!attempt)
+            throw new common_1.NotFoundException('Attempt not found');
+        return this.sanitizeAttempt(attempt);
+    }
+    async getAttemptDetailsForTeacher(attemptId) {
+        const attempt = await this.attemptModel.findById(attemptId).populate('assessmentId').populate('studentId', 'name username email');
         if (!attempt)
             throw new common_1.NotFoundException('Attempt not found');
         return this.sanitizeAttempt(attempt);

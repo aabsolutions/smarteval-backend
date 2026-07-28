@@ -24,9 +24,11 @@ export declare class AssessmentAttemptsService {
     }[], antiCheatLog?: any, isTimeout?: boolean): Promise<AssessmentAttempt>;
     getAttemptStatus(assessmentId: string, studentId: string): Promise<any>;
     getStudentHistory(studentId: string): Promise<any[]>;
+    getStudentHistoryByProfileId(studentProfileId: string): Promise<any[]>;
     getAttemptsByAssessment(assessmentId: string, studentId: string): Promise<AssessmentAttempt[]>;
     removeAllForStudent(studentId: string): Promise<any>;
     getAttemptDetails(attemptId: string, studentId: string): Promise<any>;
+    getAttemptDetailsForTeacher(attemptId: string): Promise<any>;
     getPaperAttemptById(attemptId: string): Promise<AssessmentAttempt>;
     archiveAttempt(attemptId: string): Promise<AssessmentAttempt>;
     getArchivedAttempts(assessmentId: string): Promise<AssessmentAttempt[]>;

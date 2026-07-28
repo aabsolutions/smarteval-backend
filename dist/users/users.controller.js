@@ -21,6 +21,9 @@ const roles_guard_1 = require("../auth/guards/roles.guard");
 const roles_decorator_1 = require("../auth/decorators/roles.decorator");
 const create_user_dto_1 = require("./dto/create-user.dto");
 const update_user_dto_1 = require("./dto/update-user.dto");
+const update_profile_dto_1 = require("./dto/update-profile.dto");
+const change_password_dto_1 = require("./dto/change-password.dto");
+const multer_image_config_1 = require("../common/config/multer-image.config");
 let UsersController = class UsersController {
     constructor(usersService) {
         this.usersService = usersService;
@@ -70,9 +73,6 @@ let UsersController = class UsersController {
     }
     async updateProfile(updateData, req, file) {
         const userId = req.user.userId || req.user.sub || req.user.id || req.user._id;
-        delete updateData.roles;
-        delete updateData.cedula;
-        delete updateData.password;
         return this.usersService.update(userId, updateData, file);
     }
     async changePassword(passData, req) {
@@ -152,12 +152,12 @@ __decorate([
 ], UsersController.prototype, "resetPassword", null);
 __decorate([
     (0, common_1.Put)('me/profile'),
-    (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('avatar')),
+    (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('avatar', multer_image_config_1.multerImageConfig)),
     __param(0, (0, common_1.Body)()),
     __param(1, (0, common_1.Request)()),
     __param(2, (0, common_1.UploadedFile)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, Object, Object]),
+    __metadata("design:paramtypes", [update_profile_dto_1.UpdateProfileDto, Object, Object]),
     __metadata("design:returntype", Promise)
 ], UsersController.prototype, "updateProfile", null);
 __decorate([
@@ -165,7 +165,7 @@ __decorate([
     __param(0, (0, common_1.Body)()),
     __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:paramtypes", [change_password_dto_1.ChangePasswordDto, Object]),
     __metadata("design:returntype", Promise)
 ], UsersController.prototype, "changePassword", null);
 exports.UsersController = UsersController = __decorate([

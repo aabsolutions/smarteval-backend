@@ -64,6 +64,12 @@ export class AssessmentAttemptsController {
     return this.attemptsService.getStudentHistory(req.user.userId || req.user.sub);
   }
 
+  @Get('teacher/student-history/:studentId')
+  @Roles('TEACHER', 'ADMIN', 'SUPERADMIN')
+  getStudentHistoryForTeacher(@Param('studentId') studentId: string) {
+    return this.attemptsService.getStudentHistoryByProfileId(studentId);
+  }
+
   @Get('status/:assessmentId')
   @Roles('STUDENT')
   getAttemptStatus(@Param('assessmentId') assessmentId: string, @Request() req) {
@@ -71,8 +77,14 @@ export class AssessmentAttemptsController {
   }
 
   @Get('details/:attemptId')
-  @Roles('STUDENT')
+  @Roles('STUDENT', 'TEACHER', 'ADMIN', 'SUPERADMIN')
   getAttemptDetails(@Param('attemptId') attemptId: string, @Request() req) {
+    const roles = req.user.roles || [];
+    const isOnlyStudent = roles.length === 1 && roles[0].name === 'STUDENT';
+    
+    if (!isOnlyStudent) {
+      return this.attemptsService.getAttemptDetailsForTeacher(attemptId);
+    }
     return this.attemptsService.getAttemptDetails(attemptId, req.user.userId || req.user.sub);
   }
 

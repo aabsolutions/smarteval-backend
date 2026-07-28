@@ -50,6 +50,16 @@ export class AssessmentsController {
     return this.assessmentsService.getFlashcards(id, req.user.username, req.user.userId || req.user.sub);
   }
 
+  @Post(':id/flashcards/track-time')
+  @Roles('STUDENT')
+  async trackFlashcardTime(
+    @Param('id') id: string, 
+    @Body('seconds') seconds: number, 
+    @Request() req
+  ) {
+    return this.assessmentsService.trackFlashcardTime(id, req.user.userId || req.user.sub, seconds);
+  }
+
   @Get(':id')
   @Roles('TEACHER', 'ADMIN', 'SUPERADMIN', 'STUDENT')
   findOne(@Param('id') id: string) {

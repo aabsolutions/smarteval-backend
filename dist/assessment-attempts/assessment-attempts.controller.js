@@ -40,10 +40,18 @@ let AssessmentAttemptsController = class AssessmentAttemptsController {
     getStudentHistory(req) {
         return this.attemptsService.getStudentHistory(req.user.userId || req.user.sub);
     }
+    getStudentHistoryForTeacher(studentId) {
+        return this.attemptsService.getStudentHistoryByProfileId(studentId);
+    }
     getAttemptStatus(assessmentId, req) {
         return this.attemptsService.getAttemptStatus(assessmentId, req.user.userId || req.user.sub);
     }
     getAttemptDetails(attemptId, req) {
+        const roles = req.user.roles || [];
+        const isOnlyStudent = roles.length === 1 && roles[0].name === 'STUDENT';
+        if (!isOnlyStudent) {
+            return this.attemptsService.getAttemptDetailsForTeacher(attemptId);
+        }
         return this.attemptsService.getAttemptDetails(attemptId, req.user.userId || req.user.sub);
     }
     getPaperAttempt(attemptId) {
@@ -114,6 +122,14 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], AssessmentAttemptsController.prototype, "getStudentHistory", null);
 __decorate([
+    (0, common_1.Get)('teacher/student-history/:studentId'),
+    (0, roles_decorator_1.Roles)('TEACHER', 'ADMIN', 'SUPERADMIN'),
+    __param(0, (0, common_1.Param)('studentId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], AssessmentAttemptsController.prototype, "getStudentHistoryForTeacher", null);
+__decorate([
     (0, common_1.Get)('status/:assessmentId'),
     (0, roles_decorator_1.Roles)('STUDENT'),
     __param(0, (0, common_1.Param)('assessmentId')),
@@ -124,7 +140,7 @@ __decorate([
 ], AssessmentAttemptsController.prototype, "getAttemptStatus", null);
 __decorate([
     (0, common_1.Get)('details/:attemptId'),
-    (0, roles_decorator_1.Roles)('STUDENT'),
+    (0, roles_decorator_1.Roles)('STUDENT', 'TEACHER', 'ADMIN', 'SUPERADMIN'),
     __param(0, (0, common_1.Param)('attemptId')),
     __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),

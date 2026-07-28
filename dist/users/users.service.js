@@ -17,9 +17,13 @@ const common_1 = require("@nestjs/common");
 const mongoose_1 = require("@nestjs/mongoose");
 const mongoose_2 = require("mongoose");
 const bcrypt = require("bcryptjs");
+const crypto = require("crypto");
 const user_schema_1 = require("./schemas/user.schema");
 const notifications_service_1 = require("../notifications/notifications.service");
 const cloudinary_service_1 = require("../cloudinary/cloudinary.service");
+function escapeRegex(value) {
+    return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
 let UsersService = class UsersService {
     constructor(userModel, connection, notificationsService, cloudinaryService) {
         this.userModel = userModel;
@@ -76,7 +80,7 @@ let UsersService = class UsersService {
     async findAll(allowedRoles, page = 1, limit = 10, search) {
         const query = { 'roles.name': { $in: allowedRoles } };
         if (search && search.trim()) {
-            const regex = new RegExp(search.trim(), 'i');
+            const regex = new RegExp(escapeRegex(search.trim()), 'i');
             query.$or = [
                 { name: regex },
                 { username: regex },
@@ -173,9 +177,13 @@ let UsersService = class UsersService {
             console.log('Iniciando el seeding de usuarios con NestJS...');
             const initialUsers = [];
             if (superAdminCount === 0) {
+                const superAdminPassword = process.env.SUPERADMIN_PASSWORD || crypto.randomBytes(12).toString('base64url');
+                if (!process.env.SUPERADMIN_PASSWORD) {
+                    console.log(`[seed] Contraseña generada para 'superadmin': ${superAdminPassword} — guardala ahora, no se vuelve a mostrar.`);
+                }
                 initialUsers.push({
                     username: 'superadmin',
-                    password: await bcrypt.hash('superadmin@123', 10),
+                    password: await bcrypt.hash(superAdminPassword, 10),
                     name: 'Super Admin',
                     email: 'superadmin@school.org',
                     roles: [{ name: 'SUPERADMIN', priority: 0 }],
@@ -183,7 +191,8 @@ let UsersService = class UsersService {
                     avatar: 'admin.jpg',
                 });
             }
-            if (userCount === 0 || (userCount > 0 && superAdminCount === 0 && userCount <= 3)) {
+            const allowDemoSeed = process.env.NODE_ENV !== 'production';
+            if (allowDemoSeed && (userCount === 0 || (userCount > 0 && superAdminCount === 0 && userCount <= 3))) {
                 initialUsers.push({
                     username: 'admin',
                     password: await bcrypt.hash('admin@123', 10),
@@ -209,6 +218,9 @@ let UsersService = class UsersService {
                     permissions: ['canRead'],
                     avatar: 'student.jpg',
                 });
+            }
+            if (initialUsers.length === 0) {
+                return;
             }
             await this.userModel.insertMany(initialUsers);
             console.log('Usuarios iniciales de NestJS creados/actualizados con éxito');

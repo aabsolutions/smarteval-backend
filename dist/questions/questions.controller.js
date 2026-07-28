@@ -22,6 +22,7 @@ const create_bulk_questions_dto_1 = require("./dto/create-bulk-questions.dto");
 const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
 const roles_guard_1 = require("../auth/guards/roles.guard");
 const roles_decorator_1 = require("../auth/decorators/roles.decorator");
+const multer_image_config_1 = require("../common/config/multer-image.config");
 let QuestionsController = class QuestionsController {
     constructor(questionsService) {
         this.questionsService = questionsService;
@@ -71,7 +72,7 @@ let QuestionsController = class QuestionsController {
 exports.QuestionsController = QuestionsController;
 __decorate([
     (0, common_1.Post)('upload-image'),
-    (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('image')),
+    (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('image', multer_image_config_1.multerImageConfig)),
     __param(0, (0, common_1.UploadedFile)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),

@@ -14,6 +14,7 @@ export declare class AssessmentAttemptsController {
         answers: string[];
     }[]): Promise<import("./assessment-attempt.schema").AssessmentAttempt>;
     getStudentHistory(req: any): Promise<any[]>;
+    getStudentHistoryForTeacher(studentId: string): Promise<any[]>;
     getAttemptStatus(assessmentId: string, req: any): Promise<any>;
     getAttemptDetails(attemptId: string, req: any): Promise<any>;
     getPaperAttempt(attemptId: string): Promise<import("./assessment-attempt.schema").AssessmentAttempt>;

@@ -48,6 +48,9 @@ let AssessmentsController = class AssessmentsController {
     async getFlashcards(id, req) {
         return this.assessmentsService.getFlashcards(id, req.user.username, req.user.userId || req.user.sub);
     }
+    async trackFlashcardTime(id, seconds, req) {
+        return this.assessmentsService.trackFlashcardTime(id, req.user.userId || req.user.sub, seconds);
+    }
     findOne(id) {
         return this.assessmentsService.findOne(id);
     }
@@ -105,6 +108,16 @@ __decorate([
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", Promise)
 ], AssessmentsController.prototype, "getFlashcards", null);
+__decorate([
+    (0, common_1.Post)(':id/flashcards/track-time'),
+    (0, roles_decorator_1.Roles)('STUDENT'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)('seconds')),
+    __param(2, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Number, Object]),
+    __metadata("design:returntype", Promise)
+], AssessmentsController.prototype, "trackFlashcardTime", null);
 __decorate([
     (0, common_1.Get)(':id'),
     (0, roles_decorator_1.Roles)('TEACHER', 'ADMIN', 'SUPERADMIN', 'STUDENT'),

@@ -17,13 +17,21 @@ let HttpExceptionFilter = HttpExceptionFilter_1 = class HttpExceptionFilter {
         const ctx = host.switchToHttp();
         const response = ctx.getResponse();
         const request = ctx.getRequest();
-        const status = exception.getStatus();
-        const exceptionResponse = exception.getResponse();
-        const errorMessage = typeof exceptionResponse === 'object' && 'message' in exceptionResponse
-            ? exceptionResponse.message
-            : exceptionResponse;
+        const isHttpException = exception instanceof common_1.HttpException;
+        const status = isHttpException
+            ? exception.getStatus()
+            : common_1.HttpStatus.INTERNAL_SERVER_ERROR;
+        const errorMessage = isHttpException
+            ? (() => {
+                const exceptionResponse = exception.getResponse();
+                return typeof exceptionResponse === 'object' && 'message' in exceptionResponse
+                    ? exceptionResponse.message
+                    : exceptionResponse;
+            })()
+            : 'Internal server error';
         if (status >= common_1.HttpStatus.INTERNAL_SERVER_ERROR) {
-            this.logger.error(`${request.method} ${request.url} ${status}`, exception.stack);
+            const stack = exception instanceof Error ? exception.stack : undefined;
+            this.logger.error(`${request.method} ${request.url} ${status}`, stack);
         }
         response.status(status).json({
             statusCode: status,
@@ -35,6 +43,6 @@ let HttpExceptionFilter = HttpExceptionFilter_1 = class HttpExceptionFilter {
 };
 exports.HttpExceptionFilter = HttpExceptionFilter;
 exports.HttpExceptionFilter = HttpExceptionFilter = HttpExceptionFilter_1 = __decorate([
-    (0, common_1.Catch)(common_1.HttpException)
+    (0, common_1.Catch)()
 ], HttpExceptionFilter);
 //# sourceMappingURL=http-exception.filter.js.map

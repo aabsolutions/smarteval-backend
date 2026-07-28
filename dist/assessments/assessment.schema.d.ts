@@ -1,5 +1,9 @@
 import { Document, Types, Schema as MongooseSchema } from 'mongoose';
 export type AssessmentDocument = Assessment & Document;
+export declare class FlashcardUsage {
+    studentId: Types.ObjectId;
+    timeSpentSeconds: number;
+}
 export declare class Assessment {
     title: string;
     description: string;
@@ -11,7 +15,7 @@ export declare class Assessment {
     startTime: Date;
     endTime: Date;
     durationMinutes: number;
-    totalQuestionsToPull: number;
+    totalQuestionsToPull?: number;
     isActive: boolean;
     antiCheat: boolean;
     shuffleOptions: boolean;
@@ -20,6 +24,7 @@ export declare class Assessment {
     allowedLateStudents: Types.ObjectId[];
     flashcardsTimeLimitMinutes: number;
     flashcardUsers: Types.ObjectId[];
+    flashcardUsages: FlashcardUsage[];
     isArchived: boolean;
 }
 export declare const AssessmentSchema: MongooseSchema<Assessment, import("mongoose").Model<Assessment, any, any, any, Document<unknown, any, Assessment, any, {}> & Assessment & {

@@ -3,6 +3,15 @@ import { Document, Types, Schema as MongooseSchema } from 'mongoose';
 
 export type AssessmentDocument = Assessment & Document;
 
+@Schema({ _id: false })
+export class FlashcardUsage {
+  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User' })
+  studentId: Types.ObjectId;
+
+  @Prop({ default: 0 })
+  timeSpentSeconds: number;
+}
+
 @Schema({ timestamps: true })
 export class Assessment {
   @Prop({ required: true })
@@ -69,6 +78,9 @@ export class Assessment {
 
   @Prop({ type: [{ type: MongooseSchema.Types.ObjectId, ref: 'User' }], default: [] })
   flashcardUsers: Types.ObjectId[];
+
+  @Prop({ type: [FlashcardUsage], default: [] })
+  flashcardUsages: FlashcardUsage[];
 
   @Prop({ default: false })
   isArchived: boolean;

@@ -91,6 +91,9 @@ export class AssessmentAttemptsService {
       
       // Shuffle the selected questions for anti-cheat randomness
       randomQuestions.sort(() => Math.random() - 0.5);
+      if (assessment.totalQuestionsToPull && assessment.totalQuestionsToPull > 0) {
+        randomQuestions = randomQuestions.slice(0, assessment.totalQuestionsToPull);
+      }
     } else {
       const pipeline = [
         { $match: { topicId: assessment.topicId } },
@@ -217,6 +220,9 @@ export class AssessmentAttemptsService {
           _id: { $in: assessment.cumulativeQuestionIds }
         }).exec();
         randomQuestions.sort(() => Math.random() - 0.5);
+        if (assessment.totalQuestionsToPull && assessment.totalQuestionsToPull > 0) {
+          randomQuestions = randomQuestions.slice(0, assessment.totalQuestionsToPull);
+        }
       } else {
         const pipeline = [
           { $match: { topicId: assessment.topicId } },
@@ -444,7 +450,8 @@ export class AssessmentAttemptsService {
 
     return {
       attemptsCount: attempts.length,
-      history: attempts.map(a => this.sanitizeAttempt(a))
+      history: attempts.map(a => this.sanitizeAttempt(a)),
+      serverTime: new Date().toISOString()
     };
   }
 
@@ -455,10 +462,9 @@ export class AssessmentAttemptsService {
       isArchived: { $ne: true }
     })
     .sort({ endTime: -1 })
-    .limit(5)
     .populate({
       path: 'assessmentId',
-      select: 'title topicId',
+      select: 'title topicId flashcardUsages flashcardsTimeLimitMinutes',
       populate: {
         path: 'topicId',
         select: 'name'
@@ -467,7 +473,52 @@ export class AssessmentAttemptsService {
     .lean()
     .exec();
 
-    return attempts;
+    const processedAttempts = attempts.map((attempt: any) => {
+      const assessment = attempt.assessmentId;
+      const usage = assessment?.flashcardUsages?.find((u: any) => u.studentId.toString() === studentId.toString());
+      return {
+        ...attempt,
+        usedFlashcards: !!usage,
+        flashcardsTimeSeconds: usage ? usage.timeSpentSeconds : 0,
+        flashcardsTimeLimitMinutes: assessment?.flashcardsTimeLimitMinutes || 0
+      };
+    });
+
+    const bestAttemptsMap = new Map<string, any>();
+    for (const attempt of processedAttempts) {
+      const assessId = attempt.assessmentId?._id?.toString() || attempt.assessmentId?.toString();
+      if (!assessId) continue;
+      
+      if (!bestAttemptsMap.has(assessId)) {
+        bestAttemptsMap.set(assessId, attempt);
+      } else {
+        const existing = bestAttemptsMap.get(assessId);
+        const currentScore = attempt.score / (attempt.maxScore || 1);
+        const existingScore = existing.score / (existing.maxScore || 1);
+        if (currentScore > existingScore) {
+          bestAttemptsMap.set(assessId, attempt);
+        }
+      }
+    }
+
+    return Array.from(bestAttemptsMap.values()).sort((a, b) => {
+      return new Date(b.endTime).getTime() - new Date(a.endTime).getTime();
+    });
+  }
+
+  async getStudentHistoryByProfileId(studentProfileId: string): Promise<any[]> {
+    const StudentModel = this.connection.model('Student');
+    const UserModel = this.connection.model('User');
+
+    const student = await StudentModel.findById(studentProfileId).exec();
+    if (!student) throw new NotFoundException('Student profile not found');
+
+    const user = await UserModel.findOne({ username: student.identifier }).exec();
+    if (!user) {
+      return [];
+    }
+
+    return this.getStudentHistory(user._id.toString());
   }
 
   async getAttemptsByAssessment(assessmentId: string, studentId: string): Promise<AssessmentAttempt[]> {
@@ -483,7 +534,13 @@ export class AssessmentAttemptsService {
   }
 
   async getAttemptDetails(attemptId: string, studentId: string): Promise<any> {
-    const attempt = await this.attemptModel.findOne({ _id: attemptId, studentId: new Types.ObjectId(studentId) }).populate('assessmentId');
+    const attempt = await this.attemptModel.findOne({ _id: attemptId, studentId: new Types.ObjectId(studentId) }).populate('assessmentId').populate('studentId', 'name username email');
+    if (!attempt) throw new NotFoundException('Attempt not found');
+    return this.sanitizeAttempt(attempt);
+  }
+
+  async getAttemptDetailsForTeacher(attemptId: string): Promise<any> {
+    const attempt = await this.attemptModel.findById(attemptId).populate('assessmentId').populate('studentId', 'name username email');
     if (!attempt) throw new NotFoundException('Attempt not found');
     return this.sanitizeAttempt(attempt);
   }

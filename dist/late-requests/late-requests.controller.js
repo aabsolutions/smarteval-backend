@@ -20,6 +20,7 @@ const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
 const roles_guard_1 = require("../auth/guards/roles.guard");
 const roles_decorator_1 = require("../auth/decorators/roles.decorator");
 const late_request_schema_1 = require("./late-request.schema");
+const multer_image_config_1 = require("../common/config/multer-image.config");
 let LateRequestsController = class LateRequestsController {
     constructor(lateRequestsService) {
         this.lateRequestsService = lateRequestsService;
@@ -55,7 +56,7 @@ exports.LateRequestsController = LateRequestsController;
 __decorate([
     (0, common_1.Post)(),
     (0, roles_decorator_1.Roles)('STUDENT'),
-    (0, common_1.UseInterceptors)((0, platform_express_1.FilesInterceptor)('files', 5)),
+    (0, common_1.UseInterceptors)((0, platform_express_1.FilesInterceptor)('files', 5, multer_image_config_1.multerImageConfig)),
     __param(0, (0, common_1.Request)()),
     __param(1, (0, common_1.Body)('teacherId')),
     __param(2, (0, common_1.Body)('assessmentId')),
@@ -68,7 +69,7 @@ __decorate([
 __decorate([
     (0, common_1.Patch)(':id/update'),
     (0, roles_decorator_1.Roles)('STUDENT'),
-    (0, common_1.UseInterceptors)((0, platform_express_1.FilesInterceptor)('files', 5)),
+    (0, common_1.UseInterceptors)((0, platform_express_1.FilesInterceptor)('files', 5, multer_image_config_1.multerImageConfig)),
     __param(0, (0, common_1.Request)()),
     __param(1, (0, common_1.Param)('id')),
     __param(2, (0, common_1.Body)('reason')),

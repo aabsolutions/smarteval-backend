@@ -8,8 +8,10 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AppModule = void 0;
 const common_1 = require("@nestjs/common");
+const core_1 = require("@nestjs/core");
 const config_1 = require("@nestjs/config");
 const mongoose_1 = require("@nestjs/mongoose");
+const throttler_1 = require("@nestjs/throttler");
 const auth_module_1 = require("./auth/auth.module");
 const users_module_1 = require("./users/users.module");
 const groups_module_1 = require("./groups/groups.module");
@@ -44,6 +46,7 @@ exports.AppModule = AppModule = __decorate([
                     socketTimeoutMS: 45000,
                 }),
             }),
+            throttler_1.ThrottlerModule.forRoot([{ ttl: 60000, limit: 100 }]),
             auth_module_1.AuthModule,
             users_module_1.UsersModule,
             groups_module_1.GroupsModule,
@@ -57,6 +60,12 @@ exports.AppModule = AppModule = __decorate([
             teachers_module_1.TeachersModule,
             cloudinary_module_1.CloudinaryModule,
             late_requests_module_1.LateRequestsModule,
+        ],
+        providers: [
+            {
+                provide: core_1.APP_GUARD,
+                useClass: throttler_1.ThrottlerGuard,
+            },
         ],
     })
 ], AppModule);

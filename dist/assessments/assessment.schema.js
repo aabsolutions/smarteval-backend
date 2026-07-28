@@ -9,9 +9,23 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.AssessmentSchema = exports.Assessment = void 0;
+exports.AssessmentSchema = exports.Assessment = exports.FlashcardUsage = void 0;
 const mongoose_1 = require("@nestjs/mongoose");
 const mongoose_2 = require("mongoose");
+let FlashcardUsage = class FlashcardUsage {
+};
+exports.FlashcardUsage = FlashcardUsage;
+__decorate([
+    (0, mongoose_1.Prop)({ type: mongoose_2.Schema.Types.ObjectId, ref: 'User' }),
+    __metadata("design:type", mongoose_2.Types.ObjectId)
+], FlashcardUsage.prototype, "studentId", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: 0 }),
+    __metadata("design:type", Number)
+], FlashcardUsage.prototype, "timeSpentSeconds", void 0);
+exports.FlashcardUsage = FlashcardUsage = __decorate([
+    (0, mongoose_1.Schema)({ _id: false })
+], FlashcardUsage);
 let Assessment = class Assessment {
 };
 exports.Assessment = Assessment;
@@ -56,7 +70,12 @@ __decorate([
     __metadata("design:type", Number)
 ], Assessment.prototype, "durationMinutes", void 0);
 __decorate([
-    (0, mongoose_1.Prop)({ required: true }),
+    (0, mongoose_1.Prop)({
+        required: [
+            function () { return !this.isCumulative; },
+            'totalQuestionsToPull is required for non-cumulative assessments',
+        ],
+    }),
     __metadata("design:type", Number)
 ], Assessment.prototype, "totalQuestionsToPull", void 0);
 __decorate([
@@ -91,6 +110,10 @@ __decorate([
     (0, mongoose_1.Prop)({ type: [{ type: mongoose_2.Schema.Types.ObjectId, ref: 'User' }], default: [] }),
     __metadata("design:type", Array)
 ], Assessment.prototype, "flashcardUsers", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: [FlashcardUsage], default: [] }),
+    __metadata("design:type", Array)
+], Assessment.prototype, "flashcardUsages", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ default: false }),
     __metadata("design:type", Boolean)

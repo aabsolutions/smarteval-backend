@@ -108,12 +108,13 @@ let AssessmentsService = class AssessmentsService {
         if (assessment.flashcardsTimeLimitMinutes === 0) {
             throw new common_1.BadRequestException('El repaso no está habilitado para este examen.');
         }
-        if (assessment.hasDoneFlashcards) {
-            throw new common_1.BadRequestException('Ya has realizado el repaso para este examen. Solo se permite una vez.');
+        const originalAssessment = await this.assessmentModel.findById(assessmentId).exec();
+        const usage = originalAssessment?.flashcardUsages?.find(u => u.studentId.toString() === userId.toString());
+        const usedSeconds = usage ? usage.timeSpentSeconds : 0;
+        const allowedSeconds = assessment.flashcardsTimeLimitMinutes * 60;
+        if (usedSeconds >= allowedSeconds) {
+            throw new common_1.BadRequestException('Ya has consumido todo el tiempo de repaso disponible para este examen.');
         }
-        await this.assessmentModel.findByIdAndUpdate(assessmentId, {
-            $addToSet: { flashcardUsers: new mongoose_2.Types.ObjectId(userId) }
-        });
         const questions = await this.questionModel.find({ topicId: assessment.topicId._id || assessment.topicId }).lean().exec();
         if (questions.length === 0) {
             throw new common_1.BadRequestException('No hay preguntas disponibles en este tema.');
@@ -131,9 +132,26 @@ let AssessmentsService = class AssessmentsService {
             }))
         };
     }
+    async trackFlashcardTime(assessmentId, userId, seconds) {
+        const assessment = await this.assessmentModel.findById(assessmentId);
+        if (!assessment)
+            throw new common_1.NotFoundException('Assessment not found');
+        const usageIndex = assessment.flashcardUsages.findIndex(u => u.studentId.toString() === userId.toString());
+        if (usageIndex >= 0) {
+            assessment.flashcardUsages[usageIndex].timeSpentSeconds += seconds;
+        }
+        else {
+            assessment.flashcardUsages.push({
+                studentId: new mongoose_2.Types.ObjectId(userId),
+                timeSpentSeconds: seconds
+            });
+        }
+        await assessment.save();
+    }
     async findOne(id) {
         const assessment = await this.assessmentModel.findById(id)
             .populate('topicId', 'name')
+            .populate('teacherId', 'name')
             .populate('groupIds', 'name')
             .lean()
             .exec();

@@ -17,6 +17,7 @@ export declare class AssessmentsController {
         }[];
     }>;
     getFlashcards(id: string, req: any): Promise<any>;
+    trackFlashcardTime(id: string, seconds: number, req: any): Promise<void>;
     findOne(id: string): Promise<any>;
     update(id: string, updateDto: UpdateAssessmentDto, req: any): Promise<import("./assessment.schema").Assessment>;
     remove(id: string, req: any): Promise<any>;

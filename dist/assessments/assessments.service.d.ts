@@ -17,6 +17,7 @@ export declare class AssessmentsService {
     findAvailableForStudent(studentGroupId: string): Promise<any[]>;
     findAvailableForStudentUser(username: string, userId: string): Promise<any[]>;
     getFlashcards(assessmentId: string, username: string, userId: string): Promise<any>;
+    trackFlashcardTime(assessmentId: string, userId: string, seconds: number): Promise<void>;
     findOne(id: string): Promise<any>;
     update(id: string, teacherId: string, updateDto: any): Promise<Assessment>;
     allowLateStudent(assessmentId: string, studentId: string): Promise<void>;

@@ -1,6 +1,8 @@
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 export declare class UsersController {
     private readonly usersService;
     constructor(usersService: UsersService);
@@ -13,7 +15,7 @@ export declare class UsersController {
     update(id: string, updateUserDto: UpdateUserDto, req: any): Promise<import("./schemas/user.schema").User>;
     remove(id: string, req: any): Promise<import("./schemas/user.schema").User>;
     resetPassword(id: string, req: any): Promise<any>;
-    updateProfile(updateData: any, req: any, file?: Express.Multer.File): Promise<import("./schemas/user.schema").User>;
-    changePassword(passData: any, req: any): Promise<any>;
+    updateProfile(updateData: UpdateProfileDto, req: any, file?: Express.Multer.File): Promise<import("./schemas/user.schema").User>;
+    changePassword(passData: ChangePasswordDto, req: any): Promise<any>;
     private checkPermissions;
 }
