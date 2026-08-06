@@ -317,7 +317,7 @@ let ReportsService = class ReportsService {
                     group: student.group || 'N/A',
                     email: student.email || 'N/A',
                     attemptNumber: `#${r.attemptNumber || 1}${r.isHighestScore ? ' (Mejor)' : ''}`,
-                    score: `${r.score} / ${r.maxScore}`,
+                    score: r.score,
                     percentage: r.percentage,
                     endTime: new Date(r.endTime).toLocaleString('es-ES'),
                     duration: r.durationMinutes,

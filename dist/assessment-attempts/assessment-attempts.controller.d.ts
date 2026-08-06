@@ -13,6 +13,7 @@ export declare class AssessmentAttemptsController {
         questionId: string;
         answers: string[];
     }[]): Promise<import("./assessment-attempt.schema").AssessmentAttempt>;
+    getStudentLeaderboard(req: any): Promise<any[]>;
     getStudentHistory(req: any): Promise<any[]>;
     getStudentHistoryForTeacher(studentId: string): Promise<any[]>;
     getAttemptStatus(assessmentId: string, req: any): Promise<any>;

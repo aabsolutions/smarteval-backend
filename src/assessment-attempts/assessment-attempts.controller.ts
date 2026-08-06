@@ -58,6 +58,12 @@ export class AssessmentAttemptsController {
     return this.attemptsService.submitPaperAttempt(attemptId, studentId, answers);
   }
 
+  @Get('student/leaderboard')
+  @Roles('STUDENT')
+  getStudentLeaderboard(@Request() req) {
+    return this.attemptsService.getStudentLeaderboard(req.user.userId || req.user.sub);
+  }
+
   @Get('student/history')
   @Roles('STUDENT')
   getStudentHistory(@Request() req) {

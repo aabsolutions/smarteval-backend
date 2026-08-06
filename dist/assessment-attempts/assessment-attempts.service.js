@@ -405,6 +405,64 @@ let AssessmentAttemptsService = class AssessmentAttemptsService {
             serverTime: new Date().toISOString()
         };
     }
+    async getStudentLeaderboard(studentId) {
+        const StudentModel = this.connection.model('Student');
+        const UserModel = this.connection.model('User');
+        const user = await UserModel.findById(studentId);
+        if (!user)
+            throw new common_1.NotFoundException('User not found');
+        const studentProfile = await StudentModel.findOne({ identifier: user.username });
+        if (!studentProfile)
+            return [];
+        const groupId = studentProfile.groupId;
+        const groupStudents = await StudentModel.find({ groupId });
+        const identifiers = groupStudents.map(s => s.identifier);
+        const users = await UserModel.find({ username: { $in: identifiers } });
+        const userIds = users.map(u => u._id);
+        const assessments = await this.assessmentModel.find({
+            groupIds: groupId,
+            isArchived: { $ne: true }
+        });
+        const assessmentIds = assessments.map(a => a._id);
+        const attempts = await this.attemptModel.find({
+            studentId: { $in: userIds },
+            assessmentId: { $in: assessmentIds },
+            status: assessment_attempt_schema_1.AttemptStatus.COMPLETED
+        });
+        const userScores = new Map();
+        for (const attempt of attempts) {
+            const uId = attempt.studentId.toString();
+            if (!userScores.has(uId))
+                userScores.set(uId, { total: 0, max: 0 });
+            const entry = userScores.get(uId);
+            entry.total += attempt.score || 0;
+            entry.max += attempt.maxScore || 1;
+        }
+        const leaderboard = users.map(u => {
+            const scoreData = userScores.get(u._id.toString()) || { total: 0, max: 1 };
+            const gradeOver10 = scoreData.max > 0 ? (scoreData.total / scoreData.max) * 10 : 0;
+            let avatarUrl = u.avatar || 'assets/images/user/user1.jpg';
+            if (!avatarUrl.startsWith('http') && !avatarUrl.startsWith('assets/')) {
+                avatarUrl = 'assets/images/user/' + avatarUrl;
+            }
+            return {
+                id: u._id.toString(),
+                name: u.name,
+                avatar: avatarUrl,
+                score: Math.round(gradeOver10 * 10) / 10,
+                badges: []
+            };
+        });
+        leaderboard.sort((a, b) => b.score - a.score);
+        leaderboard.forEach((item, index) => {
+            item.rank = index + 1;
+            if (index === 0)
+                item.badges = ['star', 'emoji_events'];
+            else if (index === 1)
+                item.badges = ['trending_up'];
+        });
+        return leaderboard.slice(0, 5);
+    }
     async getStudentHistory(studentId) {
         const attempts = await this.attemptModel.find({
             studentId: new mongoose_2.Types.ObjectId(studentId),
@@ -479,7 +537,11 @@ let AssessmentAttemptsService = class AssessmentAttemptsService {
         const attempt = await this.attemptModel.findOne({ _id: attemptId, studentId: new mongoose_2.Types.ObjectId(studentId) }).populate('assessmentId').populate('studentId', 'name username email');
         if (!attempt)
             throw new common_1.NotFoundException('Attempt not found');
-        return this.sanitizeAttempt(attempt);
+        const sanitized = this.sanitizeAttempt(attempt);
+        return {
+            ...sanitized,
+            serverTime: new Date().toISOString()
+        };
     }
     async getAttemptDetailsForTeacher(attemptId) {
         const attempt = await this.attemptModel.findById(attemptId).populate('assessmentId').populate('studentId', 'name username email');

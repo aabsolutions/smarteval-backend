@@ -455,6 +455,81 @@ export class AssessmentAttemptsService {
     };
   }
 
+  async getStudentLeaderboard(studentId: string): Promise<any[]> {
+    const StudentModel = this.connection.model('Student');
+    const UserModel = this.connection.model('User');
+
+    // Find the current user to get their group
+    const user = await UserModel.findById(studentId);
+    if (!user) throw new NotFoundException('User not found');
+
+    const studentProfile = await StudentModel.findOne({ identifier: user.username });
+    if (!studentProfile) return [];
+
+    const groupId = studentProfile.groupId;
+    
+    // Get all students in the same group
+    const groupStudents = await StudentModel.find({ groupId });
+    const identifiers = groupStudents.map(s => s.identifier);
+    const users = await UserModel.find({ username: { $in: identifiers } });
+    
+    const userIds = users.map(u => u._id);
+
+    // Get non-archived assessments for this group
+    const assessments = await this.assessmentModel.find({
+      groupIds: groupId,
+      isArchived: { $ne: true }
+    });
+    
+    const assessmentIds = assessments.map(a => a._id);
+
+    const attempts = await this.attemptModel.find({
+      studentId: { $in: userIds },
+      assessmentId: { $in: assessmentIds },
+      status: AttemptStatus.COMPLETED
+    });
+
+    const userScores = new Map<string, { total: number, max: number }>();
+    
+    for (const attempt of attempts) {
+       const uId = attempt.studentId.toString();
+       if (!userScores.has(uId)) userScores.set(uId, { total: 0, max: 0 });
+       
+       const entry = userScores.get(uId)!;
+       entry.total += attempt.score || 0;
+       entry.max += attempt.maxScore || 1;
+    }
+
+    const leaderboard: any[] = users.map(u => {
+       const scoreData = userScores.get(u._id.toString()) || { total: 0, max: 1 };
+       const gradeOver10 = scoreData.max > 0 ? (scoreData.total / scoreData.max) * 10 : 0;
+       
+       // Process avatar to use relative path if it's just a filename
+       let avatarUrl = u.avatar || 'assets/images/user/user1.jpg';
+       if (!avatarUrl.startsWith('http') && !avatarUrl.startsWith('assets/')) {
+         avatarUrl = 'assets/images/user/' + avatarUrl;
+       }
+
+       return {
+         id: u._id.toString(),
+         name: u.name,
+         avatar: avatarUrl,
+         score: Math.round(gradeOver10 * 10) / 10,
+         badges: []
+       };
+    });
+
+    leaderboard.sort((a, b) => b.score - a.score);
+
+    leaderboard.forEach((item, index) => {
+      item.rank = index + 1;
+      if (index === 0) item.badges = ['star', 'emoji_events'];
+      else if (index === 1) item.badges = ['trending_up'];
+    });
+
+    return leaderboard.slice(0, 5);
+  }
+
   async getStudentHistory(studentId: string): Promise<any[]> {
     const attempts = await this.attemptModel.find({
       studentId: new Types.ObjectId(studentId),

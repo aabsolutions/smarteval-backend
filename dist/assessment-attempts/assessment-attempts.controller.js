@@ -37,6 +37,9 @@ let AssessmentAttemptsController = class AssessmentAttemptsController {
     submitPaperAttempt(attemptId, studentId, answers) {
         return this.attemptsService.submitPaperAttempt(attemptId, studentId, answers);
     }
+    getStudentLeaderboard(req) {
+        return this.attemptsService.getStudentLeaderboard(req.user.userId || req.user.sub);
+    }
     getStudentHistory(req) {
         return this.attemptsService.getStudentHistory(req.user.userId || req.user.sub);
     }
@@ -113,6 +116,14 @@ __decorate([
     __metadata("design:paramtypes", [String, String, Array]),
     __metadata("design:returntype", void 0)
 ], AssessmentAttemptsController.prototype, "submitPaperAttempt", null);
+__decorate([
+    (0, common_1.Get)('student/leaderboard'),
+    (0, roles_decorator_1.Roles)('STUDENT'),
+    __param(0, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], AssessmentAttemptsController.prototype, "getStudentLeaderboard", null);
 __decorate([
     (0, common_1.Get)('student/history'),
     (0, roles_decorator_1.Roles)('STUDENT'),
