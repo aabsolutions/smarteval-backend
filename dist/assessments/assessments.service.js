@@ -86,11 +86,9 @@ let AssessmentsService = class AssessmentsService {
             studentId: new mongoose_2.Types.ObjectId(userId),
             status: late_request_schema_1.LateRequestStatus.APROBADA
         }).lean().exec();
-        console.log(`Found ${lateRequests.length} approved late requests for student ${student._id}`);
         return assessments.map(a => {
             const extension = lateRequests.find(lr => lr.assessmentId.toString() === a._id.toString());
             if (extension) {
-                console.log(`Matching extension found for assessment ${a._id}. extensionUntil:`, extension.extensionUntil);
             }
             const hasDoneFlashcards = a.flashcardUsers ? a.flashcardUsers.some((id) => id.toString() === userId.toString()) : false;
             if (extension && extension.extensionUntil) {

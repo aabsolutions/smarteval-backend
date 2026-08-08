@@ -16,6 +16,7 @@ import { InstitutionsModule } from './institutions/institutions.module';
 import { TeachersModule } from './teachers/teachers.module';
 import { CloudinaryModule } from './cloudinary/cloudinary.module';
 import { LateRequestsModule } from './late-requests/late-requests.module';
+import { LiveQuizzesModule } from './live-quizzes/live-quizzes.module';
 
 @Module({
   imports: [
@@ -55,6 +56,7 @@ import { LateRequestsModule } from './late-requests/late-requests.module';
     TeachersModule,
     CloudinaryModule,
     LateRequestsModule,
+    LiveQuizzesModule,
   ],
   providers: [
     {

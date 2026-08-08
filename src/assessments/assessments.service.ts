@@ -93,12 +93,12 @@ export class AssessmentsService {
       studentId: new Types.ObjectId(userId),
       status: LateRequestStatus.APROBADA
     }).lean().exec();
-    console.log(`Found ${lateRequests.length} approved late requests for student ${student._id}`);
+    //console.log(`Found ${lateRequests.length} approved late requests for student ${student._id}`);
 
     return assessments.map(a => {
       const extension = lateRequests.find(lr => lr.assessmentId.toString() === a._id.toString());
       if (extension) {
-        console.log(`Matching extension found for assessment ${a._id}. extensionUntil:`, extension.extensionUntil);
+        //console.log(`Matching extension found for assessment ${a._id}. extensionUntil:`, extension.extensionUntil);
       }
       
       const hasDoneFlashcards = a.flashcardUsers ? a.flashcardUsers.some((id: any) => id.toString() === userId.toString()) : false;

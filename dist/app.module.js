@@ -25,6 +25,7 @@ const institutions_module_1 = require("./institutions/institutions.module");
 const teachers_module_1 = require("./teachers/teachers.module");
 const cloudinary_module_1 = require("./cloudinary/cloudinary.module");
 const late_requests_module_1 = require("./late-requests/late-requests.module");
+const live_quizzes_module_1 = require("./live-quizzes/live-quizzes.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -60,6 +61,7 @@ exports.AppModule = AppModule = __decorate([
             teachers_module_1.TeachersModule,
             cloudinary_module_1.CloudinaryModule,
             late_requests_module_1.LateRequestsModule,
+            live_quizzes_module_1.LiveQuizzesModule,
         ],
         providers: [
             {
