@@ -30,6 +30,12 @@ export class LiveQuizzesController {
     return this.liveQuizzesService.findOneByTeacher(id, req.user.userId);
   }
 
+  @Get(':id/report')
+  @Roles('TEACHER', 'ADMIN')
+  getReport(@Param('id') id: string, @Request() req) {
+    return this.liveQuizzesService.getReport(id, req.user.userId);
+  }
+
   @Put(':id')
   @Roles('TEACHER', 'ADMIN')
   update(@Param('id') id: string, @Body() updateLiveQuizDto: UpdateLiveQuizDto, @Request() req) {

@@ -1,25 +1,26 @@
 /**
  * Calcula los puntos otorgados por una respuesta.
  *
- * Fórmula:
- *   - Respuesta CORRECTA:
- *     basePts  = questionPoints × 1000
- *     speedPts = (1 - responseTimeMs / timeLimitMs) × questionPoints × 500
- *     total    = basePts + speedPts
+ * `correctRatio` va de 0 (todo mal) a 1 (todo bien) — para single/multiple-choice,
+ * true-false y fill-blank es siempre 0 o 1; para matching es correctPairs/totalPairs,
+ * igual que el criterio de puntaje parcial de assessment-attempts.service.ts.
  *
- *   - Respuesta INCORRECTA: 0 puntos
+ * Fórmula (escalada por correctRatio):
+ *   basePts  = correctRatio × questionPoints × 1000
+ *   speedPts = correctRatio × (1 - responseTimeMs / timeLimitMs) × questionPoints × 500
+ *   total    = basePts + speedPts
  */
 export function calculatePoints(
-  isCorrect: boolean,
+  correctRatio: number,
   responseTimeMs: number,
   timeLimitMs: number,
   questionPoints: number = 1,
 ): number {
-  if (!isCorrect) return 0;
+  if (correctRatio <= 0) return 0;
 
-  const basePts = questionPoints * 1000;
+  const basePts = correctRatio * questionPoints * 1000;
   const speedRatio = Math.max(0, 1 - responseTimeMs / timeLimitMs);
-  const speedPts = speedRatio * questionPoints * 500;
+  const speedPts = correctRatio * speedRatio * questionPoints * 500;
 
   return Math.round(basePts + speedPts);
 }

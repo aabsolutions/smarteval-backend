@@ -6,6 +6,7 @@ import { CreateLiveQuizDto } from './dto/create-live-quiz.dto';
 import { UpdateLiveQuizDto } from './dto/update-live-quiz.dto';
 import { ImportQuestionsDto } from './dto/import-questions.dto';
 import { Question } from '../questions/question.schema';
+import { generateRanking } from './live-quiz-scoring.util';
 
 @Injectable()
 export class LiveQuizzesService {
@@ -101,6 +102,10 @@ export class LiveQuizzesService {
       statement: q.statement,
       options: q.options,
       correctAnswers: q.correctAnswers,
+      // Para matching, el banco no guarda un orden de exhibición separado:
+      // barajamos acá una copia de correctAnswers para mostrar como columna
+      // derecha, sin revelar el orden correcto (mismo criterio que assessment-attempts).
+      matchingOptions: q.type === 'matching' ? this.shuffle([...q.correctAnswers]) : undefined,
       points: q.points,
       imageUrl: q.imageUrl,
       timeLimitSeconds: dto.defaultTimeLimitSeconds
@@ -108,6 +113,58 @@ export class LiveQuizzesService {
 
     quiz.questions.push(...importedQuestions);
     return quiz.save();
+  }
+
+  private shuffle<T>(arr: T[]): T[] {
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+
+  async getReport(id: string, teacherId: string) {
+    const quiz = await this.findOneByTeacher(id, teacherId);
+
+    if (quiz.status !== LiveQuizStatus.FINISHED) {
+      throw new BadRequestException('El reporte solo está disponible para quizzes finalizados');
+    }
+
+    const ranking = generateRanking(quiz.participants.map(p => ({
+      userId: p.userId.toString(),
+      name: p.name,
+      totalScore: p.totalScore,
+      correctAnswers: p.correctAnswers,
+      totalResponseTimeMs: p.totalResponseTimeMs,
+    })));
+
+    const perQuestion = quiz.questions.map((q, index) => {
+      const questionAnswers = quiz.answers.filter(a => a.questionIndex === index);
+      const correctCount = questionAnswers.filter(a => a.isCorrect).length;
+
+      return {
+        questionIndex: index,
+        statement: q.statement,
+        type: q.type,
+        totalAnswered: questionAnswers.length,
+        correctCount,
+        correctPercentage: questionAnswers.length ? (correctCount / questionAnswers.length) * 100 : 0,
+        averageResponseTimeMs: questionAnswers.length
+          ? questionAnswers.reduce((sum, a) => sum + a.responseTimeMs, 0) / questionAnswers.length
+          : 0,
+      };
+    });
+
+    return {
+      quizId: quiz._id,
+      title: quiz.title,
+      startedAt: quiz.startedAt,
+      finishedAt: quiz.finishedAt,
+      totalQuestions: quiz.questions.length,
+      totalParticipants: quiz.participants.length,
+      ranking,
+      perQuestion,
+    };
   }
 
   async generateUniquePin(): Promise<string> {
