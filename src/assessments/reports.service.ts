@@ -165,6 +165,115 @@ export class ReportsService {
     };
   }
 
+  async getTeacherSummary(teacherId: string) {
+    const teacherObjectId = new Types.ObjectId(teacherId);
+    const now = new Date();
+
+    const assessments = await this.assessmentModel
+      .find({ teacherId: teacherObjectId, isArchived: { $ne: true } })
+      .sort({ startTime: -1 })
+      .lean()
+      .exec();
+
+    const assessmentIds = assessments.map(a => a._id);
+
+    const attempts = await this.attemptModel
+      .find({
+        assessmentId: { $in: assessmentIds },
+        status: { $in: [AttemptStatus.COMPLETED, AttemptStatus.PAPER_PENDING] },
+        isArchived: { $ne: true },
+      })
+      .populate('studentId', 'name')
+      .lean()
+      .exec();
+
+    const validAttempts = attempts.filter(a => a.studentId != null && a.maxScore > 0);
+    const percentages = validAttempts.map(a => (a.score / a.maxScore) * 100);
+
+    const totalAttempts = validAttempts.length;
+    const averageScorePercentage = totalAttempts > 0
+      ? Math.round((percentages.reduce((s, p) => s + p, 0) / totalAttempts) * 10) / 10
+      : 0;
+    const approvalRate = totalAttempts > 0
+      ? Math.round((percentages.filter(p => p >= 70).length / totalAttempts) * 1000) / 10
+      : 0;
+
+    const activeAssessments = assessments.filter(a => a.isActive && a.startTime <= now && a.endTime >= now).length;
+
+    // Ranking por estudiante: promedio de porcentaje entre todos sus intentos completados.
+    const byStudent = new Map<string, { name: string; sum: number; count: number }>();
+    for (const a of validAttempts) {
+      const student: any = a.studentId;
+      const id = student._id.toString();
+      const entry = byStudent.get(id) || { name: student.name || 'N/A', sum: 0, count: 0 };
+      entry.sum += (a.score / a.maxScore) * 100;
+      entry.count += 1;
+      byStudent.set(id, entry);
+    }
+    const rankedStudents = Array.from(byStudent.entries())
+      .map(([studentId, e]) => ({
+        studentId,
+        name: e.name,
+        averagePercentage: Math.round((e.sum / e.count) * 10) / 10,
+        attemptsCount: e.count,
+      }))
+      .sort((a, b) => b.averagePercentage - a.averagePercentage);
+
+    const topStudents = rankedStudents.slice(0, 5);
+    // Estudiantes que necesitan apoyo: los de menor promedio, por debajo de la nota de aprobación (70%).
+    const studentsNeedingSupport = rankedStudents
+      .filter(s => s.averagePercentage < 70)
+      .slice(-5)
+      .reverse();
+
+    // Tendencia: promedio por evaluación, para las últimas evaluaciones con al menos un intento.
+    const byAssessment = new Map<string, { title: string; startTime: Date; sum: number; count: number }>();
+    for (const a of validAttempts) {
+      const aId = a.assessmentId.toString();
+      const assessment = assessments.find(x => x._id.toString() === aId);
+      if (!assessment) continue;
+      const entry = byAssessment.get(aId) || { title: assessment.title, startTime: assessment.startTime, sum: 0, count: 0 };
+      entry.sum += (a.score / a.maxScore) * 100;
+      entry.count += 1;
+      byAssessment.set(aId, entry);
+    }
+    const scoreTrend = Array.from(byAssessment.entries())
+      .map(([assessmentId, e]) => ({
+        assessmentId,
+        title: e.title,
+        averagePercentage: Math.round((e.sum / e.count) * 10) / 10,
+        date: e.startTime,
+      }))
+      .sort((a, b) => a.date.getTime() - b.date.getTime())
+      .slice(-6);
+
+    const recentAssessments = assessments.slice(0, 5).map(a => {
+      let status: 'scheduled' | 'active' | 'closed' = 'closed';
+      if (a.startTime > now) status = 'scheduled';
+      else if (a.isActive && a.endTime >= now) status = 'active';
+
+      return {
+        id: a._id,
+        title: a.title,
+        status,
+        startTime: a.startTime,
+        endTime: a.endTime,
+      };
+    });
+
+    return {
+      totalAssessments: assessments.length,
+      activeAssessments,
+      totalAttempts,
+      averageScorePercentage,
+      approvalRate,
+      scoreTrend,
+      topStudents,
+      studentsNeedingSupport,
+      recentAssessments,
+    };
+  }
+
   async getAttemptDetail(assessmentId: string, attemptId: string, teacherId: string): Promise<any> {
     const assessment = await this.assessmentModel.findOne({ _id: assessmentId, teacherId: new Types.ObjectId(teacherId) });
     if (!assessment) throw new NotFoundException('Examen no encontrado');

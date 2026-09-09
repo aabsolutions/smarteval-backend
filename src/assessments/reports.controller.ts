@@ -10,6 +10,12 @@ import { Response } from 'express';
 export class ReportsController {
   constructor(private readonly reportsService: ReportsService) {}
 
+  @Get('teacher/summary')
+  @Roles('TEACHER', 'ADMIN', 'SUPERADMIN')
+  getTeacherSummary(@Request() req) {
+    return this.reportsService.getTeacherSummary(req.user.userId);
+  }
+
   @Get(':id/results')
   @Roles('TEACHER', 'ADMIN', 'SUPERADMIN')
   getResults(@Param('id') id: string, @Request() req) {
